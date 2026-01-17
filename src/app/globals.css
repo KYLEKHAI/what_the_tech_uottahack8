@@ -1,0 +1,142 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains-mono);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --radius-2xl: calc(var(--radius) + 8px);
+  --radius-3xl: calc(var(--radius) + 12px);
+  --radius-4xl: calc(var(--radius) + 16px);
+}
+
+:root {
+  --radius: 0.625rem;
+  /* Chroma-inspired color palette */
+  --background: #f9f9f8; /* Background */
+  --foreground: #040404; /* Primary text/headings/buttons */
+  --card: #ffffff; /* Cards & inputs */
+  --card-foreground: #040404;
+  --popover: #ffffff;
+  --popover-foreground: #040404;
+  --primary: #040404; /* Primary buttons/text */
+  --primary-foreground: #ffffff;
+  --secondary: #f9f9f8;
+  --secondary-foreground: #040404;
+  --muted: #f9f9f8;
+  --muted-foreground: #1a1a1a; /* Muted text/borders - darker for better readability */
+  --accent: #f9f9f8;
+  --accent-foreground: #040404;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #5e5a56; /* Muted borders */
+  --input: #ffffff; /* Input backgrounds */
+  --ring: #5e5a56;
+  --chart-1: oklch(0.646 0.222 41.116);
+  --chart-2: oklch(0.6 0.118 184.704);
+  --chart-3: oklch(0.398 0.07 227.392);
+  --chart-4: oklch(0.828 0.189 84.429);
+  --chart-5: oklch(0.769 0.188 70.08);
+  --sidebar: #ffffff;
+  --sidebar-foreground: #040404;
+  --sidebar-primary: #040404;
+  --sidebar-primary-foreground: #ffffff;
+  --sidebar-accent: #f9f9f8;
+  --sidebar-accent-foreground: #040404;
+  --sidebar-border: #5e5a56;
+  --sidebar-ring: #5e5a56;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+@keyframes fade-color {
+  0% {
+    color: #3b82f6; /* Blue */
+  }
+  25% {
+    color: #8b5cf6; /* Purple */
+  }
+  50% {
+    color: #ec4899; /* Pink */
+  }
+  75% {
+    color: #f59e0b; /* Orange */
+  }
+  100% {
+    color: #3b82f6; /* Blue */
+  }
+}
+
+@keyframes border-glow {
+  0% {
+    border-color: #3b82f6; /* Blue */
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  }
+  25% {
+    border-color: #8b5cf6; /* Purple */
+    box-shadow: 0 0 10px rgba(139, 92, 246, 0.3);
+  }
+  50% {
+    border-color: #ec4899; /* Pink */
+    box-shadow: 0 0 10px rgba(236, 72, 153, 0.3);
+  }
+  75% {
+    border-color: #f59e0b; /* Orange */
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.3);
+  }
+  100% {
+    border-color: #3b82f6; /* Blue */
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.3);
+  }
+}
+
+@layer utilities {
+  .animate-fade-color {
+    animation: fade-color 4s ease-in-out infinite;
+  }
+  .animate-border-glow {
+    animation: border-glow 4s ease-in-out infinite;
+  }
+}
