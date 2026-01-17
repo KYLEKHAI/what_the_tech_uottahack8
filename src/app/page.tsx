@@ -124,9 +124,11 @@ export default function Home() {
                   placeholder="https://github.com/owner/repo"
                   className="flex-1 border-2 border-border"
                 />
-                <Button size="lg" className="w-full sm:w-auto">
-                  Analyze Repository
-                </Button>
+                <Link href="/app">
+                  <Button size="lg" className="w-full sm:w-auto">
+                    Analyze Repository
+                  </Button>
+                </Link>
               </div>
             </CardContent>
           </Card>
