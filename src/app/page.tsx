@@ -17,27 +17,34 @@ import { getUserProfile } from "@/lib/supabase";
 const features = [
   {
     id: 1,
+    title: "Instant Analysis",
+    icon: Zap,
+    description: "Analyze any GitHub repository instantly - no signup required",
+    content: "Simply paste a GitHub repository URL and get immediate insights. View language breakdown, file statistics, and download comprehensive XML analysis. No account needed to get started!",
+  },
+  {
+    id: 2,
     title: "Agent Chat",
     icon: MessageSquare,
     description: "ChatGPT-like conversations grounded in repository context",
     content: "Ask questions about your codebase and get intelligent answers with citations from actual code. Our AI agent understands your repository structure and provides accurate, context-aware responses.",
   },
   {
-    id: 2,
+    id: 3,
     title: "Mermaid Board",
     icon: GitBranch,
     description: "Visual architecture diagrams with rendered and code views",
     content: "Explore your repository structure through interactive Mermaid diagrams. Toggle between rendered visualizations and raw Mermaid code to understand your project's architecture at a glance.",
   },
   {
-    id: 3,
+    id: 4,
     title: "RAG-Powered",
     icon: Sparkles,
     description: "Retrieval augmented generation for accurate responses",
     content: "Our system uses vector search to retrieve relevant code chunks and provides grounded answers. No hallucinations—every response is backed by actual repository content.",
   },
   {
-    id: 4,
+    id: 5,
     title: "Code Analysis",
     icon: Code,
     description: "Deep repository analysis with symbol-level understanding",
@@ -167,7 +174,7 @@ export default function Home() {
         // Store repo URL in dashboard store
         setCurrentRepoUrl(normalizedUrl);
 
-        // Redirect to dashboard
+        // Always redirect to dashboard after analysis
         router.push("/app");
       } else {
         throw new Error("Unexpected response format");
@@ -295,11 +302,22 @@ export default function Home() {
             a project on Github?
           </p>
           <p className="text-lg text-muted-foreground sm:text-xl">
-            Convert GitHub repositories into explorable knowledge hubs with AI
+            Analyze any GitHub repository instantly - no signup required!
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Get detailed analysis, language breakdown, and downloadable insights. Sign up for advanced AI features.
           </p>
 
           {/* GitHub repo URL input (Primary CTA) */}
           <div className="relative w-full max-w-lg">
+            {/* No Signup Required Badge */}
+            <div className="absolute -top-2 left-1/2 transform -translate-x-1/2 z-10">
+              <div className="bg-primary text-primary-foreground text-xs font-medium px-3 py-1 rounded-full shadow-md border border-primary/20 flex items-center gap-1">
+                <Zap className="h-3 w-3" />
+                No Sign Up Required
+              </div>
+            </div>
+            
             <Card className="w-full border-2 shadow-lg animate-border-glow py-4 gap-4">
               <CardContent className="p-4">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
