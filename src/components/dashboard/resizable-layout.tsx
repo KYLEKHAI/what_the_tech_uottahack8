@@ -13,7 +13,7 @@ export function ResizableLayout() {
       {/* Agent Chat Panel */}
       <Panel 
         defaultSize={isBoardCollapsed ? 96 : 60} 
-        minSize={30} 
+        minSize={50} 
         collapsible={false}
       >
         <AgentChat />
@@ -28,7 +28,7 @@ export function ResizableLayout() {
       <Panel 
         key={isBoardCollapsed ? "collapsed" : "expanded"}
         defaultSize={isBoardCollapsed ? 4 : 40} 
-        minSize={isBoardCollapsed ? 4 : 30}
+        minSize={isBoardCollapsed ? 4 : 50}
         collapsible={false}
       >
         <BoardPanel />

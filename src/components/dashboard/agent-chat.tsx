@@ -16,7 +16,7 @@ interface Message {
 
 // Preset question bubbles
 const presetQuestions = [
-  "What is the main entry point?",
+  "What is this project about?",
   "How does the authentication work?",
   "What are the key dependencies?",
   "How is the project structured?",

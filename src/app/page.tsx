@@ -118,14 +118,14 @@ export default function Home() {
           {/* GitHub repo URL input (Primary CTA) */}
           <Card className="w-full max-w-lg border-2 shadow-lg animate-border-glow py-4 gap-4">
             <CardContent className="p-4">
-              <div className="flex w-full flex-col gap-3 sm:flex-row">
+              <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
                 <Input
                   type="url"
                   placeholder="https://github.com/owner/repo"
                   className="flex-1 border-2 border-border"
                 />
-                <Link href="/app">
-                  <Button size="lg" className="w-full sm:w-auto">
+                <Link href="/app" className="w-full sm:w-auto">
+                  <Button size="default" className="w-full sm:w-auto">
                     Analyze Repository
                   </Button>
                 </Link>
