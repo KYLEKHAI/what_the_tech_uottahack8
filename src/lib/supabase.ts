@@ -147,3 +147,17 @@ export async function verifyUserPassword(email: string, password: string) {
     return { verified: false, error: 'Failed to verify password' };
   }
 }
+
+export async function signOutUser() {
+  try {
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    
+    return { success: true, error: null };
+  } catch (error) {
+    return { success: false, error: 'Failed to sign out' };
+  }
+}

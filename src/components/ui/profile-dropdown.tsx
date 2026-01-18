@@ -11,6 +11,7 @@ import {
 import { FolderOpen, Settings, LogOut } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
+import { handleSignOut as signOutUtil } from "@/lib/auth-utils";
 
 interface ProfileDropdownProps {
   userProfile?: {
@@ -25,8 +26,7 @@ export function ProfileDropdown({ userProfile }: ProfileDropdownProps) {
   const router = useRouter();
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push('/');
+    await signOutUtil();
   };
 
   const handleMyProjects = () => {

@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { getUserProfile, updateUserProfile, updateUserPassword, verifyUserPassword } from "@/lib/supabase";
+import { handleSignOut as signOutUtil } from "@/lib/auth-utils";
 
 export default function SettingsPage() {
   const { user, loading, signOut } = useAuth();
@@ -243,8 +244,7 @@ export default function SettingsPage() {
   };
 
   const handleSignOut = async () => {
-    await signOut();
-    router.push('/');
+    await signOutUtil();
   };
 
   const fullName = userProfile ? `${userProfile.first_name || ""} ${userProfile.last_name || ""}`.trim() : "User";
