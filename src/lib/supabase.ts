@@ -161,3 +161,25 @@ export async function signOutUser() {
     return { success: false, error: 'Failed to sign out' };
   }
 }
+
+export async function deleteUserAccount(userId: string) {
+  try {
+    const response = await fetch('/api/user/delete', {
+      method: 'DELETE',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ userId }),
+    });
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      return { success: false, error: result.error || 'Failed to delete account' };
+    }
+
+    return { success: true, error: null };
+  } catch (error) {
+    return { success: false, error: 'Failed to delete account' };
+  }
+}
