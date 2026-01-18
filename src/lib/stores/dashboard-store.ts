@@ -20,9 +20,11 @@ interface DashboardStore {
 
   // Projects management
   projects: ProjectItem[];
-  addProject: (project: ProjectItem) => void;
+  addProject: (project: ProjectItem, isSignedIn?: boolean) => void;
   deleteProject: (projectId: string) => void;
   getProjectById: (projectId: string) => ProjectItem | undefined;
+  canAddProject: (isSignedIn?: boolean) => boolean;
+  getMaxProjects: (isSignedIn?: boolean) => number;
 
   // Selected project
   selectedProjectId: string | null;
@@ -51,11 +53,17 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
 
   // Projects management
   projects: [],
-  addProject: (project) =>
+  addProject: (project, isSignedIn = false) =>
     set((state) => {
       // Check if project already exists
       const exists = state.projects.some((p) => p.id === project.id);
       if (exists) return state;
+      
+      // Check project limit
+      const maxProjects = isSignedIn ? 5 : 1;
+      if (state.projects.length >= maxProjects) {
+        return state; // Don't add if at limit
+      }
       
       return {
         projects: [...state.projects, project],
@@ -63,6 +71,14 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
         currentRepoUrl: `https://github.com/${project.owner}/${project.repo}`,
       };
     }),
+  canAddProject: (isSignedIn = false) => {
+    const state = get();
+    const maxProjects = isSignedIn ? 5 : 1;
+    return state.projects.length < maxProjects;
+  },
+  getMaxProjects: (isSignedIn = false) => {
+    return isSignedIn ? 5 : 1;
+  },
   deleteProject: (projectId) =>
     set((state) => {
       const newProjects = state.projects.filter((p) => p.id !== projectId);

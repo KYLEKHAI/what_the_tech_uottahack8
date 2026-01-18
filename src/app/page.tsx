@@ -63,6 +63,7 @@ export default function Home() {
   const router = useRouter();
   const { setCurrentRepoUrl, addProject } = useDashboardStore();
   const { user, loading } = useAuth();
+  const isSignedIn = !!user;
 
   const loadingSteps = [
     { label: "Validating repository", icon: CheckCircle2 },
@@ -732,6 +733,7 @@ export default function Home() {
           </div>
         </div>
       </footer>
+
     </div>
   );
 }

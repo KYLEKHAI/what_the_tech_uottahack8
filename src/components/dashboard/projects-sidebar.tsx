@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { useDashboardStore } from "@/lib/stores/dashboard-store";
+import { useAuth } from "@/components/providers/auth-provider";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ChevronLeft, ChevronRight, GitBranch, Trash2 } from "lucide-react";
@@ -10,6 +11,8 @@ import { cn } from "@/lib/utils";
 
 export function ProjectsSidebar() {
   const router = useRouter();
+  const { user } = useAuth();
+  const isSignedIn = !!user;
   const {
     isSidebarCollapsed,
     toggleSidebar,
@@ -17,6 +20,7 @@ export function ProjectsSidebar() {
     selectedProjectId,
     setSelectedProject,
     deleteProject,
+    getMaxProjects,
   } = useDashboardStore();
 
   const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
@@ -71,14 +75,15 @@ export function ProjectsSidebar() {
 
       {/* Projects List */}
       {!isSidebarCollapsed && (
-        <div className="flex-1 overflow-y-auto p-2">
-          {projects.length === 0 ? (
-            <div className="flex h-full items-center justify-center p-4">
-              <p className="text-center text-sm text-muted-foreground">
-                No projects yet. Analyze a repository to get started.
-              </p>
-            </div>
-          ) : (
+        <div className="flex flex-1 flex-col overflow-hidden">
+          <div className="flex-1 overflow-y-auto p-2">
+            {projects.length === 0 ? (
+              <div className="flex h-full items-center justify-center p-4">
+                <p className="text-center text-sm text-muted-foreground">
+                  No projects yet. Analyze a repository to get started.
+                </p>
+              </div>
+            ) : (
             <div className="space-y-2">
               {projects.map((project) => {
                 const isSelected = selectedProjectId === project.id;
@@ -138,7 +143,15 @@ export function ProjectsSidebar() {
                 );
               })}
             </div>
-          )}
+            )}
+          </div>
+          
+          {/* Project Count Footer */}
+          <div className="border-t border-border bg-muted/30 px-3 py-2">
+            <p className="text-xs text-center text-muted-foreground">
+              {projects.length}/{getMaxProjects(isSignedIn)} Projects
+            </p>
+          </div>
         </div>
       )}
 
