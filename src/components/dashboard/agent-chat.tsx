@@ -27,24 +27,129 @@ export function AgentChat() {
   const [input, setInput] = useState("");
   const [showAddRepoModal, setShowAddRepoModal] = useState(false);
   
+  // Local messages for non-signed-in users (temporary, cleared on session end)
+  const [localMessages, setLocalMessages] = useState<Array<{
+    id: string;
+    content: string;
+    role: 'user' | 'assistant' | 'system';
+    created_at: string;
+  }>>([]);
+  
   // Get state and actions from dashboard store
   const currentRepoUrl = useDashboardStore((state) => state.currentRepoUrl);
   const projects = useDashboardStore((state) => state.projects);
   const selectedProjectId = useDashboardStore((state) => state.selectedProjectId);
-  const chatMessages = useDashboardStore((state) => state.chatMessages);
-  const isLoadingMessages = useDashboardStore((state) => state.isLoadingMessages);
-  const loadChatMessages = useDashboardStore((state) => state.loadChatMessages);
-  const addChatMessage = useDashboardStore((state) => state.addChatMessage);
+  
+  // Database messages for signed-in users
+  const [databaseMessages, setDatabaseMessages] = useState<Array<{
+    id: string;
+    content: string;
+    role: 'user' | 'assistant' | 'system';
+    created_at: string;
+  }>>([]);
+  const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  
+  // Use database messages if signed in, local messages if not
+  const displayMessages = isSignedIn ? databaseMessages : localMessages;
   
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Load chat messages when project changes
+  // Load chat messages when project changes (for signed-in users only)
+  const loadChatMessages = async (projectId: string) => {
+    if (!isSignedIn) return;
+    
+    console.log('📋 Loading chat messages for project:', projectId);
+    setIsLoadingMessages(true);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        console.error('❌ No access token available for chat API');
+        setIsLoadingMessages(false);
+        return;
+      }
+
+      const response = await fetch(`/api/chat?projectId=${projectId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ Failed to load chat messages:', response.status, errorData);
+        setIsLoadingMessages(false);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('✅ Loaded chat messages:', result.messages?.length || 0);
+      
+      setDatabaseMessages(result.messages || []);
+      setIsLoadingMessages(false);
+    } catch (error) {
+      console.error('❌ Error loading chat messages:', error);
+      setIsLoadingMessages(false);
+    }
+  };
+
+  // Add message to database (for signed-in users only)
+  const addChatMessage = async (projectId: string, content: string, role: 'user' | 'assistant' | 'system') => {
+    if (!isSignedIn) return;
+    
+    console.log('💬 Adding chat message to project:', projectId, 'Role:', role);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        console.error('❌ No access token available for chat API');
+        return;
+      }
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          projectId,
+          message: content,
+          role
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ Failed to add chat message:', response.status, errorData);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('✅ Added chat message:', result.message?.id);
+      
+      // Add the message to local state
+      setDatabaseMessages(prev => [...prev, {
+        id: result.message.id,
+        content: content,
+        role: role,
+        created_at: result.message.created_at
+      }]);
+    } catch (error) {
+      console.error('❌ Error adding chat message:', error);
+    }
+  };
+
   useEffect(() => {
     if (selectedProjectId && isSignedIn) {
       console.log('📋 Loading chat messages for project:', selectedProjectId);
       loadChatMessages(selectedProjectId);
     }
-  }, [selectedProjectId, isSignedIn, loadChatMessages]);
+  }, [selectedProjectId, isSignedIn]);
 
   // Validate token on user sign-in
   useEffect(() => {
@@ -103,7 +208,7 @@ export function AgentChat() {
   // Auto-scroll to bottom when messages change
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [chatMessages]);
+  }, [displayMessages]);
 
   // Check and log token status when user signs in
   useEffect(() => {
@@ -156,35 +261,64 @@ export function AgentChat() {
     checkTokenStatus();
   }, [isSignedIn, user]);
 
+  // Generate AI response (shared by both signed-in and non-signed-in users)
+  const generateAIResponse = async (userMessage: string): Promise<string> => {
+    // TODO: Replace with actual Gemini integration
+    // This is where you'll add: await callGeminiAPI(userMessage, context)
+    return "This is a placeholder response. RAG integration will be added later.";
+  };
+
   const handleSend = async (question?: string) => {
     const questionText = question || input.trim();
     if (!questionText) return;
 
-    if (!selectedProjectId) {
-      console.error('❌ No project selected for chat');
-      return;
-    }
-
-    if (!isSignedIn) {
-      console.error('❌ User must be signed in to send messages');
-      return;
-    }
-
     setInput("");
 
-    try {
-      // Add user message to database
-      console.log('💬 Sending user message...');
-      await addChatMessage(selectedProjectId, questionText, 'user');
+    if (isSignedIn) {
+      // Database storage for signed-in users
+      if (!selectedProjectId) {
+        console.error('❌ No project selected for chat');
+        return;
+      }
 
-      // Simulate assistant response (mock for now - will be replaced with actual AI later)
+      try {
+        // Add user message to database
+        console.log('💬 Sending user message to database...');
+        await addChatMessage(selectedProjectId, questionText, 'user');
+
+        // Generate AI response and add to database
+        setTimeout(async () => {
+          const assistantResponse = await generateAIResponse(questionText);
+          console.log('🤖 Adding assistant response to database...');
+          await addChatMessage(selectedProjectId, assistantResponse, 'assistant');
+        }, 1000);
+      } catch (error) {
+        console.error('❌ Error sending message:', error);
+      }
+    } else {
+      // Local storage for non-signed-in users (temporary messages)
+      console.log('💬 Adding message to local storage (temporary)...');
+      
+      const userMessage = {
+        id: Date.now().toString(),
+        content: questionText,
+        role: 'user' as const,
+        created_at: new Date().toISOString()
+      };
+
+      setLocalMessages(prev => [...prev, userMessage]);
+
+      // Generate AI response and add to local storage
       setTimeout(async () => {
-        const assistantResponse = "This is a placeholder response. RAG integration will be added later.";
-        console.log('🤖 Adding assistant response...');
-        await addChatMessage(selectedProjectId, assistantResponse, 'assistant');
+        const assistantResponse = await generateAIResponse(questionText);
+        const assistantMessage = {
+          id: (Date.now() + 1).toString(),
+          content: assistantResponse,
+          role: 'assistant' as const,
+          created_at: new Date().toISOString()
+        };
+        setLocalMessages(prev => [...prev, assistantMessage]);
       }, 1000);
-    } catch (error) {
-      console.error('❌ Error sending message:', error);
     }
   };
 
@@ -205,7 +339,7 @@ export function AgentChat() {
       {/* Messages Container */}
       <div className="flex-1 overflow-y-auto p-4">
         <div className="mx-auto w-full max-w-5xl h-full">
-          {chatMessages.length === 0 ? (
+          {displayMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center space-y-6 h-full min-h-[400px]">
               {/* Loading state */}
               {isLoadingMessages ? (
@@ -236,7 +370,7 @@ export function AgentChat() {
             </div>
           ) : (
             <div className="space-y-4 pb-6">
-              {chatMessages.map((message) => (
+              {displayMessages.map((message) => (
                 <div
                   key={message.id}
                   className={cn(
