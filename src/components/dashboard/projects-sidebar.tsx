@@ -53,9 +53,9 @@ export function ProjectsSidebar() {
       )}
     >
       {/* Toggle Button */}
-      <div className="flex h-14 items-center justify-between border-b border-border px-3">
+      <div className="flex h-14 items-center justify-between border-b border-border bg-card px-3">
         {!isSidebarCollapsed && (
-          <h2 className="text-sm font-semibold text-foreground">Projects</h2>
+          <h2 className="text-lg font-semibold text-foreground">Projects</h2>
         )}
         <Button
           variant="ghost"
