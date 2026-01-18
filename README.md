@@ -19,18 +19,40 @@ npm run dev
 
 ```
 
+(set .env variables TBD)
+
 ## Tech Stack
 
-- **Framework**: Next.js 16 (App Router)
-- **Language**: TypeScript
+### Frontend
+- **Framework**: Next.js 16.1.3 (App Router)
+- **Language**: TypeScript 5
+- **UI Library**: React 19.2.3
 - **Styling**: Tailwind CSS v4
-- **UI Components**: shadcn/ui
-- **State Management**: TanStack Query, Zustand
+- **UI Components**: shadcn/ui (built on Radix UI)
 - **Icons**: lucide-react
-- **Validation**: Zod
+- **Theming**: next-themes
+- **Layout**: react-resizable-panels
 
-## Project Structure
+### State Management
+- **Server State**: TanStack Query (React Query) 5.90.19
+- **Client State**: Zustand 5.0.10
 
+### Backend & Database
+- **Backend**: Next.js API Routes
+- **Database & Auth**: Supabase (PostgreSQL + Authentication)
+- **Storage**: Supabase Storage
+
+### AI & ML
+- **AI Models**: Google Gemini AI (via @google/generative-ai)
+- **Code Analysis**: Repomix (repository ingestion)
+
+### Visualization & Content
+- **Diagrams**: Mermaid.js
+- **Markdown**: react-markdown with remark-gfm
+
+### Utilities
+- **Validation**: Zod 4.3.5
+- **Styling Utilities**: class-variance-authority, clsx, tailwind-merge
 
 ## Acknowledgements
 
