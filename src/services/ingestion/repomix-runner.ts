@@ -49,7 +49,6 @@ export async function runRepomix(
         cwd: repoPath,
         maxBuffer: 50 * 1024 * 1024, // 50MB buffer for large repos
         env,
-        shell: true, // Use shell for better command resolution
       }
     );
 
