@@ -309,18 +309,65 @@ export async function getUserProjects(userId: string) {
 
 export async function deleteProject(projectId: string) {
   try {
-    // Cascade deletion is handled by database foreign key constraints
+    console.log(`Deleting project ${projectId} and all associated artifacts...`);
+    
+    // First, get artifact records to delete storage files
+    const { data: artifacts, error: artifactsError } = await supabase
+      .from('repo_artifacts')
+      .select('storage_path')
+      .eq('project_id', projectId);
+
+    if (artifactsError) {
+      console.error("Error fetching artifacts for deletion:", artifactsError);
+      // Continue with deletion even if we can't fetch artifacts
+    } else if (artifacts && artifacts.length > 0) {
+      // Delete storage files
+      for (const artifact of artifacts) {
+        if (artifact.storage_path) {
+          const { error: storageError } = await supabase.storage
+            .from('repo-artifacts')
+            .remove([artifact.storage_path]);
+
+          if (storageError) {
+            console.error(`Error deleting storage file ${artifact.storage_path}:`, storageError);
+            // Continue with deletion even if storage deletion fails
+          } else {
+            console.log(`✓ Deleted storage file: ${artifact.storage_path}`);
+          }
+        }
+      }
+
+      // Delete artifact records from database
+      const { error: deleteArtifactsError } = await supabase
+        .from('repo_artifacts')
+        .delete()
+        .eq('project_id', projectId);
+
+      if (deleteArtifactsError) {
+        console.error("Error deleting artifact records:", deleteArtifactsError);
+        return { error: deleteArtifactsError.message };
+      } else {
+        console.log(`✓ Deleted ${artifacts.length} artifact record(s) from repo_artifacts table`);
+      }
+    } else {
+      console.log("No artifacts found for project, proceeding with project deletion");
+    }
+
+    // Finally, delete the project itself
     const { error } = await supabase
       .from('projects')
       .delete()
       .eq('id', projectId);
 
     if (error) {
+      console.error("Error deleting project:", error);
       return { error: error.message };
     }
 
+    console.log(`✓ Successfully deleted project ${projectId} and all associated artifacts`);
     return { error: null };
   } catch (error) {
+    console.error("Exception deleting project:", error);
     return { error: 'Failed to delete project' };
   }
 }
