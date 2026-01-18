@@ -2,10 +2,11 @@
 
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card } from "@/components/ui/card";
-import { Send, Github } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Send, Github, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "@/lib/stores/dashboard-store";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -25,28 +26,53 @@ const presetQuestions = [
 ];
 
 export function AgentChat() {
+  const router = useRouter();
   const { user } = useAuth();
+  const isSignedIn = !!user;
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
+  const [showAddRepoModal, setShowAddRepoModal] = useState(false);
   const currentRepoUrl = useDashboardStore((state) => state.currentRepoUrl);
+  const projects = useDashboardStore((state) => state.projects);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Extract repo name from URL (e.g., "owner/repo" from "https://github.com/owner/repo")
   const getRepoName = () => {
-    if (!currentRepoUrl) return "knowledge_base";
+    if (!currentRepoUrl) {
+      // If signed in and no projects, show "add repo"
+      if (isSignedIn && projects.length === 0) {
+        return "add repo";
+      }
+      return "knowledge_base";
+    }
     try {
       const url = new URL(currentRepoUrl);
       const pathParts = url.pathname.split("/").filter(Boolean);
       if (pathParts.length >= 2) {
         return `${pathParts[0]}/${pathParts[1]}`;
       }
-      return "knowledge_base";
+      return isSignedIn && projects.length === 0 ? "add repo" : "knowledge_base";
     } catch {
-      return currentRepoUrl.replace("https://github.com/", "").replace("http://github.com/", "") || "knowledge_base";
+      const cleaned = currentRepoUrl.replace("https://github.com/", "").replace("http://github.com/", "");
+      return cleaned || (isSignedIn && projects.length === 0 ? "add repo" : "knowledge_base");
     }
   };
 
   const repoName = getRepoName();
+  const showAddRepo = isSignedIn && projects.length === 0 && !currentRepoUrl;
+
+  const handleAddRepoClick = () => {
+    setShowAddRepoModal(true);
+  };
+
+  const handleConfirmAddRepo = () => {
+    setShowAddRepoModal(false);
+    router.push("/");
+  };
+
+  const handleCancelAddRepo = () => {
+    setShowAddRepoModal(false);
+  };
 
   // Auto-scroll to bottom when messages change
   useEffect(() => {
@@ -168,12 +194,59 @@ export function AgentChat() {
           </div>
 
           {/* Knowledge Base Indicator */}
-          <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
-            <Github className="h-4 w-4" />
-            <span className="font-medium">{repoName}</span>
-          </div>
+          {showAddRepo ? (
+            <button
+              onClick={handleAddRepoClick}
+              className="flex items-center gap-2 text-sm text-muted-foreground pt-1 px-3 py-1.5 rounded-lg border border-border hover:bg-accent hover:text-foreground transition-colors"
+            >
+              <Plus className="h-4 w-4" />
+              <span className="font-medium">{repoName}</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
+              <Github className="h-4 w-4" />
+              <span className="font-medium">{repoName}</span>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Add Repo Confirmation Modal */}
+      {showAddRepoModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={handleCancelAddRepo}
+        >
+          <Card
+            className="w-full max-w-md border-2 border-primary/50 bg-card shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardContent className="flex flex-col gap-4 p-6">
+              <p className="text-center text-base font-medium text-foreground">
+                Redirect to home page to add a repository?
+              </p>
+              <div className="flex justify-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCancelAddRepo}
+                  className="min-w-[80px]"
+                >
+                  No
+                </Button>
+                <Button
+                  variant="default"
+                  size="sm"
+                  onClick={handleConfirmAddRepo}
+                  className="min-w-[80px]"
+                >
+                  Yes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
     </div>
   );
 }

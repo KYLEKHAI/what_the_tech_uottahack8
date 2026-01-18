@@ -30,11 +30,10 @@ export function ProjectsSidebar() {
     setDeleteConfirmId(projectId);
   };
 
-  const handleDeleteConfirm = (projectId: string) => {
+  const handleDeleteConfirm = async (projectId: string) => {
     const wasLastProject = projects.length === 1;
-    const wasSelected = selectedProjectId === projectId;
 
-    deleteProject(projectId);
+    await deleteProject(projectId, isSignedIn);
     setDeleteConfirmId(null);
 
     // If it was the last project, redirect to home

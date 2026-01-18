@@ -12,7 +12,7 @@ import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCir
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "@/lib/stores/dashboard-store";
 import { useAuth } from "@/components/providers/auth-provider";
-import { getUserProfile } from "@/lib/supabase";
+import { getUserProfile, supabase } from "@/lib/supabase";
 
 const features = [
   {
@@ -175,11 +175,26 @@ export default function Home() {
     timeoutId = setTimeout(advanceStep, stepTimings[0]);
 
     try {
+      // Get access token from Supabase session to pass to API route
+      let accessToken: string | null = null;
+      if (isSignedIn && user) {
+        const { data: { session } } = await supabase.auth.getSession();
+        accessToken = session?.access_token || null;
+      }
+
+      const headers: HeadersInit = {
+        "Content-Type": "application/json",
+      };
+
+      // Add authorization header if we have an access token
+      if (accessToken) {
+        headers["Authorization"] = `Bearer ${accessToken}`;
+      }
+
       const response = await fetch("/api/projects/ingest", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers,
+        credentials: "include", // Ensure cookies are sent with the request
         body: JSON.stringify({ repoUrl: normalizedUrl }),
       });
 
@@ -195,7 +210,18 @@ export default function Home() {
         setLoadingStep(loadingSteps.length - 1);
         
         const repoName = `${data.data.repoInfo.owner}-${data.data.repoInfo.name}`;
-        const projectId = `${data.data.repoInfo.owner}-${data.data.repoInfo.name}-${Date.now()}`;
+        
+        // Use database UUID if available (signed-in user), otherwise generate string ID
+        const projectId = data.data.projectId || `${data.data.repoInfo.owner}-${data.data.repoInfo.name}-${Date.now()}`;
+        
+        // Log for debugging
+        if (isSignedIn) {
+          if (data.data.projectId) {
+            console.log("Project created in database with ID:", data.data.projectId);
+          } else {
+            console.warn("User is signed in but projectId is missing. Project may not be saved to database.");
+          }
+        }
         
         // Download XML file
         if (data.data.xmlContent) {
@@ -204,13 +230,14 @@ export default function Home() {
 
         // Add project to store and select it (this also sets currentRepoUrl)
         addProject({
-          id: projectId,
+          id: projectId, // Use UUID as string ID if from database, otherwise generated ID
+          dbId: data.data.projectId || undefined, // Store database UUID if available
           name: data.data.repoInfo.name,
           repoUrl: `${data.data.repoInfo.owner}/${data.data.repoInfo.name}`,
           owner: data.data.repoInfo.owner,
           repo: data.data.repoInfo.name,
           status: "ready",
-        });
+        }, isSignedIn);
 
         // Small delay before redirect to show completion
         setTimeout(() => {

@@ -161,3 +161,72 @@ export async function signOutUser() {
     return { success: false, error: 'Failed to sign out' };
   }
 }
+
+// Project helper functions
+export async function createProject(projectData: {
+  user_id: string;
+  repo_url: string;
+  repo_owner: string;
+  repo_name: string;
+  status?: 'created' | 'ingesting' | 'ready' | 'failed';
+  default_branch?: string;
+}) {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .insert({
+        user_id: projectData.user_id,
+        repo_url: projectData.repo_url,
+        repo_owner: projectData.repo_owner,
+        repo_name: projectData.repo_name,
+        status: projectData.status || 'ready',
+        default_branch: projectData.default_branch || 'main',
+      })
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error: error.message };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error: 'Failed to create project' };
+  }
+}
+
+export async function getUserProjects(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('projects')
+      .select('*')
+      .eq('user_id', userId)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      return { data: null, error: error.message };
+    }
+
+    return { data: data || [], error: null };
+  } catch (error) {
+    return { data: null, error: 'Failed to fetch projects' };
+  }
+}
+
+export async function deleteProject(projectId: string) {
+  try {
+    // Cascade deletion is handled by database foreign key constraints
+    const { error } = await supabase
+      .from('projects')
+      .delete()
+      .eq('id', projectId);
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { error: null };
+  } catch (error) {
+    return { error: 'Failed to delete project' };
+  }
+}
