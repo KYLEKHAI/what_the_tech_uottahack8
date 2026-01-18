@@ -197,6 +197,101 @@ export async function POST(request: NextRequest) {
             console.log("Project created successfully in database:", projectId);
           }
         }
+
+        // Save XML to Supabase Storage if project was created/found
+        if (projectId && result.xmlContent) {
+          try {
+            const fileName = `${projectId}/repomix.xml`;
+            const fileSize = Buffer.byteLength(result.xmlContent, 'utf-8');
+            
+            console.log(`Attempting to save XML for project ${projectId} (${fileSize} bytes)...`);
+            
+            // Use authenticated client - RLS policies will enforce user ownership
+            // (We've already verified user owns the project at the application level)
+            const { data: uploadData, error: uploadError } = await supabase.storage
+              .from('repo-artifacts')
+              .upload(fileName, result.xmlContent, {
+                contentType: 'application/xml',
+                upsert: true,
+              });
+
+            if (uploadError) {
+              // Check if bucket doesn't exist
+              if (uploadError.message.includes('Bucket not found') || uploadError.message.includes('not found')) {
+                console.warn("Storage bucket 'repo-artifacts' not found. Please create it in Supabase Storage.");
+                console.warn("XML will not be saved. Please create the 'repo-artifacts' bucket in Supabase Storage.");
+              } else {
+                console.error("Failed to upload XML to storage:", uploadError);
+                console.error("Upload error details:", JSON.stringify(uploadError, null, 2));
+              }
+            } else {
+              console.log("XML uploaded to storage successfully:", fileName);
+              
+              // Save artifact record in database (delete existing first, then insert)
+              // Since there's no unique constraint, we delete and re-insert
+              // RLS policies will enforce user ownership
+              const { error: deleteError } = await supabase
+                .from('repo_artifacts')
+                .delete()
+                .eq('project_id', projectId)
+                .eq('artifact_type', 'repomix');
+              
+              if (deleteError) {
+                console.warn("Error deleting existing artifact (may not exist):", deleteError);
+              }
+              
+              // Then insert new artifact
+              const { data: artifactData, error: artifactError } = await supabase
+                .from('repo_artifacts')
+                .insert({
+                  project_id: projectId,
+                  artifact_type: 'repomix',
+                  storage_path: fileName,
+                  checksum: null,
+                  file_size: fileSize,
+                })
+                .select()
+                .single();
+              
+              if (artifactError) {
+                console.error("Failed to save artifact record:", artifactError);
+                console.error("Artifact error details:", JSON.stringify(artifactError, null, 2));
+                console.error("Project ID:", projectId);
+                console.error("File name:", fileName);
+              } else {
+                console.log("XML artifact record saved successfully:", artifactData?.id);
+                console.log("XML saved to database storage for project:", projectId, `(${fileSize} bytes)`);
+                
+                // Verify the artifact was actually saved
+                const { data: verifyArtifact, error: verifyError } = await supabase
+                  .from('repo_artifacts')
+                  .select('id, storage_path')
+                  .eq('project_id', projectId)
+                  .eq('artifact_type', 'repomix')
+                  .single();
+                
+                if (verifyError || !verifyArtifact) {
+                  console.error("WARNING: Artifact verification failed after insert!");
+                  console.error("Verify error:", verifyError);
+                } else {
+                  console.log("✓ Artifact verified in database:", verifyArtifact.id, verifyArtifact.storage_path);
+                }
+              }
+            }
+          } catch (storageError) {
+            console.error("Exception saving XML to storage:", storageError);
+            if (storageError instanceof Error) {
+              console.error("Storage error stack:", storageError.stack);
+            }
+          }
+        } else {
+          if (!projectId) {
+            console.warn("No projectId available, cannot save XML");
+          }
+          if (!result.xmlContent) {
+            console.warn("No XML content available, cannot save XML");
+          }
+        }
       } catch (error) {
         console.error("Exception creating/finding project:", error);
       }
@@ -204,10 +299,28 @@ export async function POST(request: NextRequest) {
       console.log("No user found, project will not be saved to database");
     }
 
-    // Return the ingestion result
-    // TODO: Store artifact in Supabase Storage
-    // TODO: Start chunking and embedding process
+    // Check if XML was successfully saved (for signed-in users)
+    let xmlSaved = false;
+    if (user && projectId && result.xmlContent) {
+      // Verify artifact was saved by checking if it exists
+      const { data: artifactCheck } = await supabase
+        .from('repo_artifacts')
+        .select('id')
+        .eq('project_id', projectId)
+        .eq('artifact_type', 'repomix')
+        .single();
+      
+      xmlSaved = !!artifactCheck;
+      if (!xmlSaved) {
+        console.warn("XML artifact was not saved successfully. Will return XML in response as fallback.");
+      } else {
+        console.log("XML artifact verified in database for project:", projectId);
+      }
+    }
 
+    // Return the ingestion result
+    // Note: For signed-in users, XML is stored in database, but if storage failed, return it as fallback
+    // For non-signed-in users, XML is always returned for localStorage
     return NextResponse.json({
       success: true,
       data: {
@@ -215,9 +328,12 @@ export async function POST(request: NextRequest) {
         repoInfo: result.repoInfo,
         metadata: result.metadata,
         artifactSize: result.artifactSize,
-        // Return full XML content for download
-        xmlContent: result.xmlContent,
+        // Return XML content if:
+        // 1. User is not signed in (for localStorage)
+        // 2. User is signed in but XML wasn't saved to storage (fallback)
+        xmlContent: (!user || !xmlSaved) ? result.xmlContent : undefined,
         xmlPreview: result.xmlContent.substring(0, 1000), // First 1000 chars as preview
+        xmlSaved, // Indicate if XML was successfully saved to storage (for debugging)
       },
     });
   } catch (error) {

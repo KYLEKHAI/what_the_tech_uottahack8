@@ -10,7 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCircle, Loader2, CheckCircle2, FileCode } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useDashboardStore } from "@/lib/stores/dashboard-store";
+import { useDashboardStore, saveXMLToLocalStorage } from "@/lib/stores/dashboard-store";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getUserProfile, supabase } from "@/lib/supabase";
 
@@ -129,17 +129,6 @@ export default function Home() {
     return trimmed;
   };
 
-  const downloadXML = (xmlContent: string, repoName: string) => {
-    const blob = new Blob([xmlContent], { type: "application/xml" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `${repoName}-repomix.xml`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
 
   const handleAnalyze = async () => {
     setError(null);
@@ -283,12 +272,17 @@ export default function Home() {
           }
         }
         
-        // Download XML file
-        if (data.data.xmlContent) {
-          downloadXML(data.data.xmlContent, repoName);
+        // Save XML content (for non-signed-in users, store locally; for signed-in, already in database)
+        if (!isSignedIn && data.data.xmlContent) {
+          // Save XML to localStorage for non-signed-in users
+          saveXMLToLocalStorage(projectId, data.data.xmlContent);
         }
 
         // Add project to store and select it (this also sets currentRepoUrl)
+        // Store XML locally if:
+        // 1. User is not signed in (always store locally)
+        // 2. User is signed in but XML wasn't saved to storage (fallback)
+        const shouldStoreXMLLocally = !isSignedIn || (isSignedIn && data.data.xmlContent && !data.data.xmlSaved);
         addProject({
           id: projectId, // Use UUID as string ID if from database, otherwise generated ID
           dbId: data.data.projectId || undefined, // Store database UUID if available
@@ -297,6 +291,7 @@ export default function Home() {
           owner: data.data.repoInfo.owner,
           repo: data.data.repoInfo.name,
           status: "ready",
+          xmlContent: shouldStoreXMLLocally ? data.data.xmlContent : undefined,
         }, isSignedIn);
 
         // Small delay before redirect to show completion
