@@ -344,10 +344,7 @@ export default function Home() {
             a project on Github?
           </p>
           <p className="text-lg text-muted-foreground sm:text-xl">
-            Analyze any GitHub repository instantly - no signup required!
-          </p>
-          <p className="text-sm text-muted-foreground">
-            Get detailed analysis, language breakdown, and downloadable insights. Sign up for advanced AI features.
+            Convert GitHub repositories into explorable knowledge hubs with AI
           </p>
 
           {/* GitHub repo URL input (Primary CTA) */}
