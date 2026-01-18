@@ -74,3 +74,90 @@ export const authHelpers = {
     return { data, error }
   }
 }
+
+export async function getUserProfile(userId: string) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('id', userId)
+      .single();
+
+    if (error) {
+      return { data: null, error: error.message };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error: 'Failed to fetch profile' };
+  }
+}
+
+export async function updateUserProfile(userId: string, profileData: {
+  first_name?: string;
+  last_name?: string;
+}) {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update(profileData)
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error: error.message };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error: 'Failed to update profile' };
+  }
+}
+
+export async function updateUserPassword(newPassword: string) {
+  try {
+    const { error } = await supabase.auth.updateUser({
+      password: newPassword
+    });
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    return { error: null };
+  } catch (error) {
+    return { error: 'Failed to update password' };
+  }
+}
+
+export async function verifyUserPassword(email: string, password: string) {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      return { verified: false, error: error.message };
+    }
+
+    return { verified: true, error: null };
+  } catch (error) {
+    return { verified: false, error: 'Failed to verify password' };
+  }
+}
+
+export async function signOutUser() {
+  try {
+    const { error } = await supabase.auth.signOut();
+    
+    if (error) {
+      return { success: false, error: error.message };
+    }
+    
+    return { success: true, error: null };
+  } catch (error) {
+    return { success: false, error: 'Failed to sign out' };
+  }
+}

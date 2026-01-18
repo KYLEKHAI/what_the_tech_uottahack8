@@ -2,18 +2,30 @@
 
 import Link from "next/link";
 import Image from "next/image";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuLabel,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { User, Settings } from "lucide-react";
+import { ProfileDropdown } from "@/components/ui/profile-dropdown";
+import { useAuth } from "@/components/providers/auth-provider";
+import { getUserProfile } from "@/lib/supabase";
+import { useEffect, useState } from "react";
 
 export function DashboardHeader() {
+  const { user } = useAuth();
+  const [userProfile, setUserProfile] = useState<any>(null);
+
+  // Fetch user profile when user is authenticated
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user?.id) {
+        const { data } = await getUserProfile(user.id);
+        if (data) {
+          setUserProfile(data);
+        }
+      }
+    };
+
+    if (user) {
+      fetchProfile();
+    }
+  }, [user]);
   return (
     <header className="flex h-14 items-center justify-between border-b border-border bg-card px-4">
       {/* Left: Logo/Home link */}
@@ -34,31 +46,7 @@ export function DashboardHeader() {
       </Link>
 
       {/* Right: User Profile Menu */}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <button className="flex items-center gap-2 rounded-full hover:bg-accent p-1 transition-colors">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary text-primary-foreground">
-                <User className="h-4 w-4" />
-              </AvatarFallback>
-            </Avatar>
-          </button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-56">
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem asChild>
-            <Link href="/app/settings" className="flex items-center">
-              <Settings className="mr-2 h-4 w-4" />
-              Account Settings
-            </Link>
-          </DropdownMenuItem>
-          <DropdownMenuSeparator />
-          <DropdownMenuItem>
-            <span>Sign out</span>
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
+      <ProfileDropdown userProfile={userProfile} />
     </header>
   );
 }

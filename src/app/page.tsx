@@ -7,9 +7,12 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCircle, Loader2, CheckCircle2, FileCode } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "@/lib/stores/dashboard-store";
+import { useAuth } from "@/components/providers/auth-provider";
+import { getUserProfile } from "@/lib/supabase";
 
 const features = [
   {
@@ -49,8 +52,10 @@ export default function Home() {
   const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isErrorVisible, setIsErrorVisible] = useState(false);
+  const [userProfile, setUserProfile] = useState<any>(null);
   const router = useRouter();
   const { setCurrentRepoUrl, addProject } = useDashboardStore();
+  const { user, loading } = useAuth();
 
   const loadingSteps = [
     { label: "Validating repository", icon: CheckCircle2 },
@@ -58,6 +63,24 @@ export default function Home() {
     { label: "Analyzing codebase", icon: FileCode },
     { label: "Generating context", icon: Sparkles },
   ];
+
+  // Fetch user profile when user is authenticated
+  useEffect(() => {
+    const fetchProfile = async () => {
+      if (user?.id) {
+        const { data } = await getUserProfile(user.id);
+        if (data) {
+          setUserProfile(data);
+        }
+      }
+    };
+
+    if (user) {
+      fetchProfile();
+    } else {
+      setUserProfile(null);
+    }
+  }, [user]);
 
   const validateGitHubUrl = (url: string): boolean => {
     try {
@@ -259,7 +282,7 @@ export default function Home() {
             </span>
           </button>
 
-          {/* Right: About link + Features link + Sign In button */}
+          {/* Right: About link + Features link + Auth section */}
           <div className="flex items-center gap-6">
             <a
               href="#about"
@@ -273,11 +296,19 @@ export default function Home() {
             >
               Features
             </a>
-            <Link href="/signin">
-              <Button variant="default" size="default">
-                Sign In
-              </Button>
-            </Link>
+            {loading ? (
+              <div className="w-8 h-8 flex items-center justify-center">
+                <Loader2 className="h-4 w-4 animate-spin" />
+              </div>
+            ) : user ? (
+              <ProfileDropdown userProfile={userProfile} />
+            ) : (
+              <Link href="/signin">
+                <Button variant="default" size="default">
+                  Sign In
+                </Button>
+              </Link>
+            )}
           </div>
         </nav>
       </header>

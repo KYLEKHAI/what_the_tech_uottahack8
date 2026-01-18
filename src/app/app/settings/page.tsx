@@ -1,16 +1,22 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { ArrowLeft, Eye, EyeOff, LogOut, Edit2, User, Shield } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, LogOut, Edit2, User, Shield, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/components/providers/auth-provider";
+import { useRouter } from "next/navigation";
+import { getUserProfile, updateUserProfile, updateUserPassword, verifyUserPassword } from "@/lib/supabase";
+import { handleSignOut as signOutUtil } from "@/lib/auth-utils";
 
 export default function SettingsPage() {
+  const { user, loading, signOut } = useAuth();
+  const router = useRouter();
   const [activeSection, setActiveSection] = useState("account");
   const [isEditingProfile, setIsEditingProfile] = useState(false);
   const [isEditingPassword, setIsEditingPassword] = useState(false);
@@ -19,18 +25,32 @@ export default function SettingsPage() {
   const [showNewPassword, setShowNewPassword] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
 
-  // Mock user data - will be replaced with Supabase data
-  const [userData, setUserData] = useState({
-    firstName: "Kyle",
-    lastName: "Tran",
-    email: "kylekhai04@gmail.com",
-    initials: "KT",
-  });
+  useEffect(() => {
+    if (!loading && !user) {
+      router.push('/signin');
+    }
+  }, [user, loading, router]);
+
+  if (loading) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return null; // Will redirect to signin
+  }
+
+  // Real user data from database
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState(true);
 
   const [profileData, setProfileData] = useState({
-    firstName: userData.firstName,
-    lastName: userData.lastName,
-    email: userData.email,
+    firstName: "",
+    lastName: "",
+    email: "",
   });
 
   const [passwordData, setPasswordData] = useState({
@@ -39,61 +59,169 @@ export default function SettingsPage() {
     confirmPassword: "",
   });
 
+  const [errors, setErrors] = useState<{[key: string]: string}>({});
+
+  // Load user profile data
+  useEffect(() => {
+    const loadProfile = async () => {
+      if (user?.id) {
+        const { data } = await getUserProfile(user.id);
+        if (data) {
+          setUserProfile(data);
+          setProfileData({
+            firstName: data.first_name || "",
+            lastName: data.last_name || "",
+            email: user.email || "",
+          });
+        }
+        setIsLoadingProfile(false);
+      }
+    };
+
+    loadProfile();
+  }, [user]);
+
   const handleProfileChange = (field: string, value: string) => {
     setProfileData((prev) => ({ ...prev, [field]: value }));
+    // Clear any existing errors for this field
+    setErrors((prev) => ({ ...prev, [field]: "" }));
   };
 
   const handlePasswordChange = (field: string, value: string) => {
     setPasswordData((prev) => ({ ...prev, [field]: value }));
+    // Clear any existing errors for this field
+    setErrors((prev) => ({ ...prev, [field]: "" }));
+  };
+
+  const validateProfile = () => {
+    const newErrors: {[key: string]: string} = {};
+    
+    if (!profileData.firstName.trim()) {
+      newErrors.firstName = "First name is required";
+    }
+    if (!profileData.lastName.trim()) {
+      newErrors.lastName = "Last name is required";
+    }
+    if (!profileData.email.trim()) {
+      newErrors.email = "Email is required";
+    } else if (!/\S+@\S+\.\S+/.test(profileData.email)) {
+      newErrors.email = "Please enter a valid email address";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSaveProfile = async () => {
+    if (!validateProfile()) return;
+    
     setIsSaving(true);
+    setErrors({});
     
-    // TODO: Update user data in Supabase
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    try {
+      const { error } = await updateUserProfile(user!.id, {
+        first_name: profileData.firstName,
+        last_name: profileData.lastName,
+      });
+
+      if (error) {
+        setErrors({ general: error });
+      } else {
+        // Update local state
+        setUserProfile((prev: any) => ({
+          ...prev,
+          first_name: profileData.firstName,
+          last_name: profileData.lastName,
+        }));
+        setIsEditingProfile(false);
+      }
+    } catch (err) {
+      setErrors({ general: "Failed to update profile" });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const validatePassword = () => {
+    const newErrors: {[key: string]: string} = {};
     
-    setUserData({
-      ...userData,
-      firstName: profileData.firstName,
-      lastName: profileData.lastName,
-      email: profileData.email,
-      initials: `${profileData.firstName[0]}${profileData.lastName[0]}`,
-    });
+    if (!passwordData.newPassword) {
+      newErrors.newPassword = "New password is required";
+    } else if (passwordData.newPassword.length < 8) {
+      newErrors.newPassword = "Password must be at least 8 characters";
+    }
     
-    setIsEditingProfile(false);
-    setIsSaving(false);
+    if (passwordData.newPassword !== passwordData.confirmPassword) {
+      newErrors.confirmPassword = "Passwords do not match";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
   };
 
   const handleSavePassword = async () => {
+    if (!validatePassword()) return;
+    
     setIsSaving(true);
+    setErrors({});
     
-    // TODO: Update password in Supabase
-    await new Promise((resolve) => setTimeout(resolve, 1000));
-    
-    setIsEditingPassword(false);
-    setIsCurrentPasswordVerified(false);
-    setIsSaving(false);
-    setPasswordData({
-      currentPassword: "",
-      newPassword: "",
-      confirmPassword: "",
-    });
+    try {
+      const { error } = await updateUserPassword(passwordData.newPassword);
+
+      if (error) {
+        setErrors({ general: error });
+      } else {
+        setIsEditingPassword(false);
+        setIsCurrentPasswordVerified(false);
+        setPasswordData({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+        setShowPassword(false);
+        setShowNewPassword(false);
+      }
+    } catch (err) {
+      setErrors({ general: "Failed to update password" });
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const handleCancelProfile = () => {
     setIsEditingProfile(false);
+    setErrors({});
     setProfileData({
-      firstName: userData.firstName,
-      lastName: userData.lastName,
-      email: userData.email,
+      firstName: userProfile?.first_name || "",
+      lastName: userProfile?.last_name || "",
+      email: user?.email || "",
     });
   };
 
-  const handleVerifyCurrentPassword = () => {
-    if (passwordData.currentPassword.trim().length > 0) {
-      // TODO: Verify current password with Supabase
-      setIsCurrentPasswordVerified(true);
+  const handleVerifyCurrentPassword = async () => {
+    if (!passwordData.currentPassword.trim()) {
+      setErrors({ currentPassword: "Current password is required" });
+      return;
+    }
+
+    setIsSaving(true);
+    setErrors({});
+    
+    try {
+      const { verified, error } = await verifyUserPassword(
+        user!.email!, 
+        passwordData.currentPassword
+      );
+
+      if (verified) {
+        setIsCurrentPasswordVerified(true);
+      } else {
+        setErrors({ currentPassword: error || "Invalid password" });
+      }
+    } catch (err) {
+      setErrors({ currentPassword: "Failed to verify password" });
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -115,18 +243,27 @@ export default function SettingsPage() {
     }
   };
 
-  const handleSignOut = () => {
-    // TODO: Implement sign out logic with Supabase
-    console.log("Sign out clicked");
+  const handleSignOut = async () => {
+    await signOutUtil();
   };
 
-  const fullName = `${userData.firstName} ${userData.lastName}`;
+  const fullName = userProfile ? `${userProfile.first_name || ""} ${userProfile.last_name || ""}`.trim() : "User";
+  const initials = userProfile ? 
+    `${userProfile.first_name?.[0] || ""}${userProfile.last_name?.[0] || ""}`.toUpperCase() || "U" : "U";
 
   const navItems = [
     { id: "account", label: "Account Information", icon: User },
     { id: "security", label: "Security", icon: Shield },
     { id: "signout", label: "Sign Out", icon: LogOut },
   ];
+
+  if (isLoadingProfile) {
+    return (
+      <div className="flex h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
@@ -168,7 +305,7 @@ export default function SettingsPage() {
                     {/* Avatar */}
                     <Avatar className="h-20 w-20">
                       <AvatarFallback className="bg-primary text-primary-foreground text-xl font-semibold">
-                        {userData.initials}
+                        {initials}
                       </AvatarFallback>
                     </Avatar>
 
@@ -178,7 +315,7 @@ export default function SettingsPage() {
                         <>
                           <div>
                             <h3 className="text-lg font-semibold text-foreground">{fullName}</h3>
-                            <p className="text-sm text-muted-foreground mt-1">{userData.email}</p>
+                            <p className="text-sm text-muted-foreground mt-1">{user?.email}</p>
                           </div>
                           <Button
                             variant="outline"
@@ -191,23 +328,41 @@ export default function SettingsPage() {
                         </>
                       ) : (
                         <div className="space-y-4">
+                          {errors.general && (
+                            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                              {errors.general}
+                            </div>
+                          )}
+                          
                           <div className="space-y-2">
                             <label className="text-sm font-medium text-foreground">Name</label>
                             <div className="flex gap-3">
-                              <Input
-                                type="text"
-                                value={profileData.firstName}
-                                onChange={(e) => handleProfileChange("firstName", e.target.value)}
-                                placeholder="First name"
-                                className="flex-1"
-                              />
-                              <Input
-                                type="text"
-                                value={profileData.lastName}
-                                onChange={(e) => handleProfileChange("lastName", e.target.value)}
-                                placeholder="Last name"
-                                className="flex-1"
-                              />
+                              <div className="flex-1">
+                                <Input
+                                  type="text"
+                                  value={profileData.firstName}
+                                  onChange={(e) => handleProfileChange("firstName", e.target.value)}
+                                  placeholder="First name"
+                                  className={cn("w-full", errors.firstName && "border-red-500")}
+                                  error={!!errors.firstName}
+                                />
+                                {errors.firstName && (
+                                  <p className="text-sm text-red-600 mt-1">{errors.firstName}</p>
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <Input
+                                  type="text"
+                                  value={profileData.lastName}
+                                  onChange={(e) => handleProfileChange("lastName", e.target.value)}
+                                  placeholder="Last name"
+                                  className={cn("w-full", errors.lastName && "border-red-500")}
+                                  error={!!errors.lastName}
+                                />
+                                {errors.lastName && (
+                                  <p className="text-sm text-red-600 mt-1">{errors.lastName}</p>
+                                )}
+                              </div>
                             </div>
                           </div>
 
@@ -272,6 +427,12 @@ export default function SettingsPage() {
                     </div>
                   ) : (
                     <div className="space-y-4">
+                      {errors.general && (
+                        <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                          {errors.general}
+                        </div>
+                      )}
+                      
                       <div className="space-y-2">
                         <label className="text-sm font-medium text-foreground">
                           Current Password
@@ -284,7 +445,8 @@ export default function SettingsPage() {
                               onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
                               onKeyPress={handleKeyPress}
                               placeholder="Enter current password"
-                              className="pr-10"
+                              className={cn("pr-10", errors.currentPassword && "border-red-500")}
+                              error={!!errors.currentPassword}
                               disabled={isCurrentPasswordVerified}
                             />
                             <button
@@ -302,12 +464,15 @@ export default function SettingsPage() {
                           {!isCurrentPasswordVerified && (
                             <Button
                               onClick={handleVerifyCurrentPassword}
-                              disabled={!passwordData.currentPassword.trim()}
+                              disabled={!passwordData.currentPassword.trim() || isSaving}
                             >
-                              Verify
+                              {isSaving ? "Verifying..." : "Verify"}
                             </Button>
                           )}
                         </div>
+                        {errors.currentPassword && (
+                          <p className="text-sm text-red-600">{errors.currentPassword}</p>
+                        )}
                       </div>
 
                       {/* Only show new password fields after current password is verified */}
@@ -321,7 +486,8 @@ export default function SettingsPage() {
                                 value={passwordData.newPassword}
                                 onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
                                 placeholder="Enter new password"
-                                className="pr-10"
+                                className={cn("pr-10", errors.newPassword && "border-red-500")}
+                                error={!!errors.newPassword}
                               />
                               <button
                                 type="button"
@@ -335,6 +501,9 @@ export default function SettingsPage() {
                                 )}
                               </button>
                             </div>
+                            {errors.newPassword && (
+                              <p className="text-sm text-red-600">{errors.newPassword}</p>
+                            )}
                           </div>
 
                           <div className="space-y-2">
@@ -346,7 +515,12 @@ export default function SettingsPage() {
                               value={passwordData.confirmPassword}
                               onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
                               placeholder="Confirm new password"
+                              className={cn("", errors.confirmPassword && "border-red-500")}
+                              error={!!errors.confirmPassword}
                             />
+                            {errors.confirmPassword && (
+                              <p className="text-sm text-red-600">{errors.confirmPassword}</p>
+                            )}
                           </div>
                         </>
                       )}
