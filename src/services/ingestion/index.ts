@@ -11,10 +11,11 @@ export interface IngestionResult {
     commitMessage?: string;
   };
   artifactSize: number;
-  diagrams: {
+  diagrams?: {
     businessFlow: string;
     dataFlow: string;
   };
+  diagramsSkipped?: boolean; // Indicates if diagrams were skipped due to authentication
 }
 
 /**
@@ -43,9 +44,17 @@ export async function ingestRepository(
       outputFormat: "xml",
     });
 
-    // 5. Generate comprehensive project diagrams
-    console.log("🎯 Generating project diagrams...");
-    const diagrams = await generateProjectDiagrams(xmlContent, repoInfo);
+    // 5. Generate comprehensive project diagrams (only for authenticated users)
+    let diagrams;
+    let diagramsSkipped = false;
+    
+    if (options.skipDiagrams) {
+      console.log("⏭️ Skipping diagram generation - user not authenticated");
+      diagramsSkipped = true;
+    } else {
+      console.log("🎯 Generating project diagrams...");
+      diagrams = await generateProjectDiagrams(xmlContent, repoInfo);
+    }
 
     // 6. Calculate artifact size
     const artifactSize = Buffer.byteLength(xmlContent, "utf-8");
@@ -59,6 +68,7 @@ export async function ingestRepository(
       metadata,
       artifactSize,
       diagrams,
+      diagramsSkipped,
     };
   } catch (error) {
     throw new Error(

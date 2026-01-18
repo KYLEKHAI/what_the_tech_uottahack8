@@ -3,12 +3,13 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { LayoutGrid, Code, ChevronRight, ChevronLeft, RefreshCw, Loader2 } from "lucide-react";
+import { LayoutGrid, Code, ChevronRight, ChevronLeft, RefreshCw, Loader2, Lock } from "lucide-react";
 import { useDashboardStore, loadDiagramFromLocalStorage } from "@/lib/stores/dashboard-store";
 import { cn } from "@/lib/utils";
 import { useEffect, useRef, useState } from "react";
 import mermaid from "mermaid";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/components/providers/auth-provider";
 
 interface DiagramData {
   businessFlow: string | null;
@@ -18,6 +19,7 @@ interface DiagramData {
 
 export function BoardPanel() {
   const { isBoardCollapsed, toggleBoard, selectedProjectId } = useDashboardStore();
+  const { user } = useAuth();
   const [diagramData, setDiagramData] = useState<DiagramData | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -464,6 +466,23 @@ export function BoardPanel() {
                 message="No project selected" 
                 subMessage="Select a project from the sidebar to view its architecture diagrams" 
               />
+            ) : !user ? (
+              <div className="flex h-full items-center justify-center">
+                <div className="flex flex-col items-center gap-4 text-center max-w-md">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Lock className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Sign In Required</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Diagrams are only available for signed-in users. Please sign in to view and generate architecture diagrams.
+                    </p>
+                    <Button onClick={() => window.location.href = '/signin'}>
+                      Sign In to View Diagrams
+                    </Button>
+                  </div>
+                </div>
+              </div>
             ) : (!diagramData?.businessFlow && !diagramData?.dataFlow) ? (
               <EmptyState 
                 message="No diagrams available" 
@@ -737,6 +756,23 @@ export function BoardPanel() {
                 message="No project selected" 
                 subMessage="Select a project from the sidebar to view its Mermaid code" 
               />
+            ) : !user ? (
+              <div className="flex h-full items-center justify-center">
+                <div className="flex flex-col items-center gap-4 text-center max-w-md">
+                  <div className="h-16 w-16 rounded-full bg-primary/10 flex items-center justify-center">
+                    <Lock className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">Sign In Required</h3>
+                    <p className="text-sm text-muted-foreground mb-4">
+                      Diagram code is only available for signed-in users. Please sign in to view and copy Mermaid code.
+                    </p>
+                    <Button onClick={() => window.location.href = '/signin'}>
+                      Sign In to View Code
+                    </Button>
+                  </div>
+                </div>
+              </div>
             ) : (!diagramData?.businessFlow && !diagramData?.dataFlow) ? (
               <EmptyState 
                 message="No code available" 

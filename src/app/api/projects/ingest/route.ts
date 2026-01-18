@@ -154,6 +154,8 @@ export async function POST(request: NextRequest) {
     const result = await ingestRepository(repoUrl, {
       outputFormat: "xml",
       verbose: false,
+      // Pass whether user is authenticated to control diagram generation
+      skipDiagrams: !user,
     });
 
     // Create project in database if user is signed in
@@ -344,8 +346,12 @@ export async function POST(request: NextRequest) {
         xmlContent: (!user || !xmlSaved) ? result.xmlContent : undefined,
         xmlPreview: result.xmlContent.substring(0, 1000), // First 1000 chars as preview
         xmlSaved, // Indicate if XML was successfully saved to storage (for debugging)
-        // Include generated diagrams
+        // Include generated diagrams (will be undefined if user not authenticated)
         diagrams: result.diagrams,
+        // Add message if diagrams were skipped
+        message: result.diagramsSkipped 
+          ? "⚠️ Diagrams are only available for signed-in users. Please sign in to view diagrams." 
+          : undefined,
       },
     });
   } catch (error) {

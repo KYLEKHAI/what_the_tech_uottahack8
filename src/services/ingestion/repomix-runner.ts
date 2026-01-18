@@ -5,6 +5,7 @@ export interface RepomixOptions {
   outputFormat?: "xml" | "json" | "markdown";
   outputPath?: string;
   verbose?: boolean;
+  skipDiagrams?: boolean; // If true, skip diagram generation
 }
 
 // File extensions to include
