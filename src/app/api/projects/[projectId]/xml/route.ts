@@ -189,15 +189,22 @@ export async function GET(
 
     console.log("Found artifact record:", artifact.storage_path);
 
-    // Download XML from storage - RLS policies will enforce user ownership
-    const { data: xmlData, error: downloadError } = await supabase.storage
+    // Use service role client for storage access (more reliable for server operations)
+    const { createServerSupabaseClient } = await import('@/lib/supabase');
+    const serverSupabase = createServerSupabaseClient();
+    
+    // Download XML from storage using service role
+    console.log("Attempting to download XML from storage with service role...");
+    const { data: xmlData, error: downloadError } = await serverSupabase.storage
       .from("repo-artifacts")
       .download(artifact.storage_path);
 
     if (downloadError || !xmlData) {
       console.error("Failed to download XML from storage:", downloadError);
+      console.error("Storage path attempted:", artifact.storage_path);
+      console.error("Bucket: repo-artifacts");
       return NextResponse.json(
-        { error: "Failed to retrieve XML from storage" },
+        { error: "Failed to retrieve XML from storage", details: downloadError?.message },
         { status: 500 }
       );
     }

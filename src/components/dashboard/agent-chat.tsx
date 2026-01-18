@@ -3,6 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
@@ -48,6 +50,7 @@ export function AgentChat() {
     created_at: string;
   }>>([]);
   const [isLoadingMessages, setIsLoadingMessages] = useState(false);
+  const [isLoadingAI, setIsLoadingAI] = useState(false);
   
   // Use database messages if signed in, local messages if not
   const displayMessages = isSignedIn ? databaseMessages : localMessages;
@@ -263,21 +266,137 @@ export function AgentChat() {
 
   // Generate AI response (shared by both signed-in and non-signed-in users)
   const generateAIResponse = async (userMessage: string): Promise<string> => {
-    // TODO: Replace with actual Gemini integration
-    // This is where you'll add: await callGeminiAPI(userMessage, context)
-    return "This is a placeholder response. RAG integration will be added later.";
+    try {
+      // Get session token for signed-in users
+      let authHeaders = {};
+      if (isSignedIn && user) {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.access_token) {
+          authHeaders = { 'Authorization': `Bearer ${session.access_token}` };
+        }
+      }
+
+      // Try to get project XML - from database for signed-in users, localStorage for guests
+      let projectXML = null;
+      if (selectedProjectId) {
+        if (isSignedIn) {
+          // Signed-in users: fetch XML from database
+          try {
+            console.log('🔍 Fetching XML from database for signed-in user, project:', selectedProjectId);
+            const xmlResponse = await fetch(`/api/projects/${selectedProjectId}/xml`, {
+              headers: authHeaders
+            });
+            
+            if (xmlResponse.ok) {
+              const xmlData = await xmlResponse.json();
+              projectXML = xmlData.xmlContent;
+              
+              // Enhanced XML validation
+              if (projectXML && projectXML.trim().length > 0) {
+                const cleanXML = projectXML.trim();
+                console.log('✅ Database XML Content Loaded:', {
+                  length: cleanXML.length,
+                  hasStructure: cleanXML.includes('<') && cleanXML.includes('>'),
+                  preview: cleanXML.substring(0, 150) + (cleanXML.length > 150 ? '...' : ''),
+                  isEmpty: cleanXML.length === 0
+                });
+                
+                if (cleanXML.length < 100) {
+                  console.warn('⚠️ XML content seems very minimal, might not contain full project structure');
+                }
+              } else {
+                console.warn('⚠️ Database XML response received but content is empty or null');
+                projectXML = null;
+              }
+            } else {
+              console.warn('⚠️ Could not load project XML from database:', xmlResponse.status);
+              const errorText = await xmlResponse.text();
+              console.warn('⚠️ XML Error response:', errorText);
+            }
+          } catch (xmlError) {
+            console.warn('⚠️ Error loading project XML from database:', xmlError);
+          }
+        } else {
+          // Non-signed-in users: get XML from localStorage
+          try {
+            console.log('🔍 Fetching XML from localStorage for guest user, project:', selectedProjectId);
+            const localXMLKey = `what-the-tech-xml-${selectedProjectId}`;
+            const storedXML = localStorage.getItem(localXMLKey);
+            
+            if (storedXML && storedXML.trim().length > 0) {
+              projectXML = storedXML.trim();
+              console.log('✅ Local XML Content Loaded:', {
+                length: projectXML.length,
+                hasStructure: projectXML.includes('<') && projectXML.includes('>'),
+                preview: projectXML.substring(0, 150) + (projectXML.length > 150 ? '...' : ''),
+                source: 'localStorage'
+              });
+              
+              if (projectXML.length < 100) {
+                console.warn('⚠️ Local XML content seems very minimal, might not contain full project structure');
+              }
+            } else {
+              console.warn('⚠️ No XML found in localStorage for project:', selectedProjectId);
+              console.warn('⚠️ Available localStorage keys:', Object.keys(localStorage).filter(key => key.includes('xml')));
+            }
+          } catch (localError) {
+            console.warn('⚠️ Error accessing localStorage for XML:', localError);
+          }
+        }
+      } else {
+        console.log('⚠️ No project selected, cannot fetch XML');
+      }
+
+      const response = await fetch('/api/gemini', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...authHeaders
+        },
+        body: JSON.stringify({
+          message: userMessage,
+          projectXML,
+          chatHistory: displayMessages.slice(-5), // Send last 5 messages for context
+          userId: user?.id,
+          isSignedIn
+        })
+      });
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error('❌ Gemini API error:', response.status, errorText);
+        
+        // Provide helpful error messages
+        if (response.status === 429) {
+          return "I'm currently handling many requests. Please try again in a moment.";
+        } else if (response.status === 401) {
+          return "Authentication issue. Please try signing in again.";
+        } else {
+          return "I'm having trouble connecting right now. Please try again.";
+        }
+      }
+
+      const data = await response.json();
+      return data.response || "I apologize, but I couldn't generate a proper response. Please try rephrasing your question.";
+      
+    } catch (error) {
+      console.error('❌ Error calling Gemini API:', error);
+      return "I'm experiencing technical difficulties. Please try again in a moment.";
+    }
   };
 
   const handleSend = async (question?: string) => {
     const questionText = question || input.trim();
-    if (!questionText) return;
+    if (!questionText || isLoadingAI) return;
 
     setInput("");
+    setIsLoadingAI(true);
 
     if (isSignedIn) {
       // Database storage for signed-in users
       if (!selectedProjectId) {
         console.error('❌ No project selected for chat');
+        setIsLoadingAI(false);
         return;
       }
 
@@ -287,13 +406,14 @@ export function AgentChat() {
         await addChatMessage(selectedProjectId, questionText, 'user');
 
         // Generate AI response and add to database
-        setTimeout(async () => {
-          const assistantResponse = await generateAIResponse(questionText);
-          console.log('🤖 Adding assistant response to database...');
-          await addChatMessage(selectedProjectId, assistantResponse, 'assistant');
-        }, 1000);
+        console.log('🤖 Generating AI response...');
+        const assistantResponse = await generateAIResponse(questionText);
+        console.log('🤖 Adding assistant response to database...');
+        await addChatMessage(selectedProjectId, assistantResponse, 'assistant');
       } catch (error) {
         console.error('❌ Error sending message:', error);
+      } finally {
+        setIsLoadingAI(false);
       }
     } else {
       // Local storage for non-signed-in users (temporary messages)
@@ -308,8 +428,9 @@ export function AgentChat() {
 
       setLocalMessages(prev => [...prev, userMessage]);
 
-      // Generate AI response and add to local storage
-      setTimeout(async () => {
+      try {
+        // Generate AI response and add to local storage
+        console.log('🤖 Generating AI response...');
         const assistantResponse = await generateAIResponse(questionText);
         const assistantMessage = {
           id: (Date.now() + 1).toString(),
@@ -318,7 +439,11 @@ export function AgentChat() {
           created_at: new Date().toISOString()
         };
         setLocalMessages(prev => [...prev, assistantMessage]);
-      }, 1000);
+      } catch (error) {
+        console.error('❌ Error generating AI response:', error);
+      } finally {
+        setIsLoadingAI(false);
+      }
     }
   };
 
@@ -386,10 +511,52 @@ export function AgentChat() {
                         : "bg-card text-card-foreground"
                     )}
                   >
-                    <p className="text-sm leading-relaxed">{message.content}</p>
+                    {message.role === "user" ? (
+                      <p className="text-sm leading-relaxed">{message.content}</p>
+                    ) : (
+                      <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+                        <ReactMarkdown 
+                          remarkPlugins={[remarkGfm]}
+                          components={{
+                            // Custom styling for markdown elements
+                            h1: ({node, ...props}: any) => <h1 className="text-lg font-bold mb-2" {...props} />,
+                            h2: ({node, ...props}: any) => <h2 className="text-md font-semibold mb-2" {...props} />,
+                            h3: ({node, ...props}: any) => <h3 className="text-sm font-medium mb-1" {...props} />,
+                            p: ({node, ...props}: any) => <p className="mb-2" {...props} />,
+                            ul: ({node, ...props}: any) => <ul className="mb-2 ml-4 list-disc" {...props} />,
+                            ol: ({node, ...props}: any) => <ol className="mb-2 ml-4 list-decimal" {...props} />,
+                            li: ({node, ...props}: any) => <li className="mb-1" {...props} />,
+                            code: ({node, ...props}: any) => {
+                              const inline = 'inline' in props && props.inline;
+                              return inline 
+                                ? <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
+                                : <code className="block bg-muted p-2 rounded text-xs mb-2 whitespace-pre-wrap" {...props} />;
+                            },
+                            strong: ({node, ...props}: any) => <strong className="font-semibold" {...props} />,
+                            em: ({node, ...props}: any) => <em className="italic" {...props} />,
+                          }}
+                        >
+                          {message.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                   </Card>
                 </div>
               ))}
+              
+              {/* AI Typing Indicator */}
+              {isLoadingAI && (
+                <div className="flex justify-start">
+                  <Card className="max-w-[80%] p-3 bg-card text-card-foreground">
+                    <div className="flex space-x-1">
+                      <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.3s]"></div>
+                      <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce [animation-delay:-0.15s]"></div>
+                      <div className="h-2 w-2 bg-muted-foreground rounded-full animate-bounce"></div>
+                    </div>
+                  </Card>
+                </div>
+              )}
+              
               <div ref={messagesEndRef} />
             </div>
           )}
@@ -409,6 +576,7 @@ export function AgentChat() {
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               className="flex-1 rounded-lg border-2 border-border focus-visible:border-ring"
+              disabled={isLoadingAI}
             />
 
             {/* Send Button */}
@@ -416,6 +584,7 @@ export function AgentChat() {
               onClick={() => handleSend()}
               size="icon"
               className="h-9 w-9 shrink-0 rounded-full"
+              disabled={isLoadingAI || !input.trim()}
             >
               <Send className="h-4 w-4" />
             </Button>
