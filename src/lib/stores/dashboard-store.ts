@@ -121,6 +121,17 @@ interface DashboardStore {
   // Current repository
   currentRepoUrl: string | null;
   setCurrentRepoUrl: (url: string | null) => void;
+
+  // Current XML content (for agent/board context)
+  currentXMLContent: string | null;
+  setCurrentXMLContent: (xml: string | null) => void;
+  loadProjectXML: (projectId: string, isSignedIn: boolean) => Promise<void>;
+
+  // Chat messages
+  chatMessages: ChatMessage[];
+  isLoadingMessages: boolean;
+  loadChatMessages: (projectId: string) => Promise<void>;
+  addChatMessage: (projectId: string, content: string, role: 'user' | 'assistant' | 'system') => Promise<void>;
 }
 
 export const useDashboardStore = create<DashboardStore>((set, get) => ({
