@@ -87,7 +87,21 @@ export async function generateProjectDiagrams(
   repoInfo: { owner: string; name: string }
 ): Promise<{ businessFlow: string; dataFlow: string }> {
   try {
-    console.log("🎯 Starting AI-powered diagram generation for:", `${repoInfo.owner}/${repoInfo.name}`);
+    console.log("🎯 Starting diagram generation for:", `${repoInfo.owner}/${repoInfo.name}`);
+
+    // Check if Claude is enabled via environment variable
+    const claudeEnabled = process.env.CLAUDE_ENABLED !== 'false';
+    
+    if (!claudeEnabled) {
+      console.log("⚠️ Claude is disabled - using fallback diagrams");
+      const fallback = generateFallbackDiagrams(repoInfo);
+      return {
+        businessFlow: fallback.businessFlow,
+        dataFlow: fallback.dataFlow
+      };
+    }
+
+    console.log("🤖 Claude is enabled - generating AI-powered diagrams");
 
     // Generate diagrams directly with AI - no intermediate analysis needed
     const analysis = await analyzeProjectStructure(xmlContent, repoInfo);
