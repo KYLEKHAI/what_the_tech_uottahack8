@@ -84,31 +84,31 @@
 
 .dark {
   /* Warm, cohesive dark theme palette */
-  --background: #0f0f0f; /* Soft black - warmer than pure black */
+  --background: #181818; /* Warmer dark grey - not pure black */
   --foreground: #f5f5f5; /* Soft white - easier on eyes */
-  --card: #1a1a1a; /* Slightly lighter than background for depth */
+  --card: #1f1f1f; /* Slightly lighter than background for depth */
   --card-foreground: #f5f5f5;
-  --popover: #1f1f1f; /* Subtle elevation */
+  --popover: #252525; /* Subtle elevation */
   --popover-foreground: #f5f5f5;
   --primary: #f5f5f5; /* Light text for dark mode */
-  --primary-foreground: #0f0f0f;
-  --secondary: #252525; /* Warmer grey for secondary elements */
+  --primary-foreground: #181818;
+  --secondary: #2a2a2a; /* Warmer grey for secondary elements */
   --secondary-foreground: #f5f5f5;
-  --muted: #2a2a2a; /* Muted backgrounds - warmer tone */
+  --muted: #2f2f2f; /* Muted backgrounds - warmer tone */
   --muted-foreground: #a8a8a8; /* Softer muted text */
-  --accent: #2a2a2a;
+  --accent: #2f2f2f;
   --accent-foreground: #f5f5f5;
   --destructive: oklch(0.75 0.18 25);
-  --border: #2f2f2f; /* Softer borders - better contrast */
-  --input: #1a1a1a; /* Input backgrounds */
+  --border: #353535; /* Softer borders - better contrast */
+  --input: #1f1f1f; /* Input backgrounds */
   --ring: #404040; /* Focus rings - more visible */
-  --sidebar: #1a1a1a;
+  --sidebar: #1f1f1f;
   --sidebar-foreground: #f5f5f5;
   --sidebar-primary: #f5f5f5;
-  --sidebar-primary-foreground: #0f0f0f;
-  --sidebar-accent: #252525;
+  --sidebar-primary-foreground: #181818;
+  --sidebar-accent: #2a2a2a;
   --sidebar-accent-foreground: #f5f5f5;
-  --sidebar-border: #2f2f2f;
+  --sidebar-border: #353535;
   --sidebar-ring: #404040;
 }
 

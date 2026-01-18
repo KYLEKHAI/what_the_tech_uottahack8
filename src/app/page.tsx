@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCircle, Loader2, CheckCircle2, FileCode } from "lucide-react";
+import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCircle, Loader2, CheckCircle2, FileCode, Eye, Package, Network, Workflow } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore, saveXMLToLocalStorage, saveDiagramToLocalStorage } from "@/lib/stores/dashboard-store";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -18,38 +18,38 @@ import { getUserProfile, supabase } from "@/lib/supabase";
 const features = [
   {
     id: 1,
-    title: "Instant Analysis",
+    title: "Instant Repository Analysis",
     icon: Zap,
-    description: "Analyze any GitHub repository instantly - no signup required",
-    content: "Simply paste a GitHub repository URL and get immediate insights. View language breakdown, file statistics, and download comprehensive XML analysis. No account needed to get started!",
+    description: "Analyze any GitHub repository instantly",
+    content: "Simply paste a GitHub repository URL and get immediate insights. Our system uses Repomix to generate comprehensive XML analysis of your entire codebase, extracting file structures, dependencies, and project metadata. No account needed to get started. Analyze public repositories instantly!",
   },
   {
     id: 2,
-    title: "Agent Chat",
+    title: "AI-Powered Agent Chat",
     icon: MessageSquare,
-    description: "ChatGPT-like conversations grounded in repository context",
-    content: "Ask questions about your codebase and get intelligent answers with citations from actual code. Our AI agent understands your repository structure and provides accurate, context-aware responses.",
+    description: "Chatbox conversations powered by Google Gemini AI",
+    content: "Ask questions about your codebase and get intelligent, context-aware answers with file citations. Powered by Google Gemini AI, our agent provides accurate responses grounded in your repository's actual code. Every answer includes references to specific files and code sections, ensuring reliable and verifiable insights.",
   },
   {
     id: 3,
-    title: "Mermaid Board",
+    title: "Interactive Mermaid Board",
     icon: GitBranch,
     description: "Visual architecture diagrams with rendered and code views",
-    content: "Explore your repository structure through interactive Mermaid diagrams. Toggle between rendered visualizations and raw Mermaid code to understand your project's architecture at a glance.",
+    content: "Explore your repository structure through interactive Mermaid diagrams. Toggle between rendered visualizations and raw Mermaid code to understand your project's architecture, data flows, and component relationships. The Board provides both high-level overviews and detailed technical diagrams generated from your codebase analysis.",
   },
   {
     id: 4,
-    title: "RAG-Powered",
+    title: "Context Caching",
     icon: Sparkles,
-    description: "Retrieval augmented generation for accurate responses",
-    content: "Our system uses vector search to retrieve relevant code chunks and provides grounded answers. No hallucinations—every response is backed by actual repository content.",
+    description: "Smart caching for faster responses and reduced token usage",
+    content: "Our system intelligently caches responses for identical questions, saving tokens and providing instant answers. Combined with optimized prompt engineering and smart chat history management, this ensures efficient API usage while maintaining high-quality, context-aware responses.",
   },
   {
     id: 5,
-    title: "Code Analysis",
+    title: "Deep Code Understanding",
     icon: Code,
-    description: "Deep repository analysis with symbol-level understanding",
-    content: "We analyze your entire codebase, extracting functions, classes, and relationships. Get insights into how components connect and interact within your project.",
+    description: "Comprehensive analysis with Repomix and AI processing",
+    content: "We analyze your entire codebase using Repomix to extract file structures, code patterns, and relationships. The system processes everything from configuration files to source code, building a complete understanding of your project's architecture, dependencies, and implementation details.",
   },
 ];
 
@@ -61,6 +61,8 @@ export default function Home() {
   const [error, setError] = useState<string | null>(null);
   const [isErrorVisible, setIsErrorVisible] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
+  const [typedContent, setTypedContent] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
   const router = useRouter();
   const { setCurrentRepoUrl, addProject, projects, canAddProject, getMaxProjects, loadProjects } = useDashboardStore();
   const { user, loading } = useAuth();
@@ -358,6 +360,29 @@ export default function Home() {
     }
   }, [error]);
 
+  // Typing animation for feature content
+  useEffect(() => {
+    setTypedContent("");
+    setIsTyping(true);
+    const content = selectedFeature.content;
+    let currentIndex = 0;
+
+    const typingInterval = setInterval(() => {
+      if (currentIndex < content.length) {
+        setTypedContent(content.substring(0, currentIndex + 1));
+        currentIndex++;
+      } else {
+        setIsTyping(false);
+        clearInterval(typingInterval);
+      }
+    }, 15); // Typing speed - adjust for faster/slower
+
+    return () => {
+      clearInterval(typingInterval);
+      setIsTyping(false);
+    };
+  }, [selectedFeature]);
+
   return (
     <div className="min-h-screen w-full bg-background">
       {/* Header/Nav */}
@@ -608,79 +633,80 @@ export default function Home() {
           <h2 className="mb-6 text-3xl font-bold text-foreground">About</h2>
           <div className="mb-12 space-y-4 text-muted-foreground">
             <p className="text-base leading-relaxed">
-              what-the-tech transforms any GitHub repository into an interactive
-              knowledge hub. Explore codebases through intelligent chat and
-              visual architecture diagrams.
+              <strong className="text-foreground">what-the-tech</strong> transforms any GitHub repository into an interactive
+              knowledge hub powered by AI. Explore codebases through intelligent chat conversations
+              and visual architecture diagrams, all without needing to clone or manually navigate repositories.
             </p>
             <p className="text-base leading-relaxed">
-              Our Agent provides ChatGPT-like conversations grounded in your
-              repository context, answering questions with citations from actual
-              code. The Board visualizes your project structure using Mermaid
-              diagrams, giving you both rendered views and raw code.
+              Our <strong className="text-foreground">Agent</strong> provides chatbox conversations powered by Google Gemini AI,
+              answering questions about your codebase with citations from actual code files. Every response
+              is grounded in your repository's content using RAG (Retrieval Augmented Generation), ensuring
+              accurate and verifiable answers.
             </p>
             <p className="text-base leading-relaxed">
-              Built for developers who want to understand codebases faster,
-              onboard new team members efficiently, and explore open-source
-              projects with confidence.
+              The <strong className="text-foreground">Board</strong> visualizes your project structure using interactive Mermaid diagrams,
+              generated from comprehensive codebase analysis. Toggle between rendered visualizations and raw
+              Mermaid code to understand architecture, data flows, and component relationships at a glance.
+            </p>
+            <p className="text-base leading-relaxed">
+              Built for developers who want to understand codebases faster, onboard new team members efficiently,
+              explore open-source projects with confidence, and get instant answers about any repository's structure
+              and implementation.
             </p>
           </div>
 
-          {/* Feature Cards Grid */}
-          <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-4">
-            {/* Feature 1 */}
-            <Card>
-              <CardHeader>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Sparkles className="h-6 w-6 text-primary" />
+          {/* Example Questions Cards Grid */}
+          <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
+            {/* Example Question 1 - Yellow */}
+            <Card className="p-4 text-center transition-all duration-200 hover:border-yellow-500/50">
+              <CardHeader className="p-0 pb-2">
+                <div className="mb-3 flex justify-center">
+                  <Eye className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <CardTitle>Feature 1</CardTitle>
-                <CardDescription>
-                  Placeholder description for feature 1. This feature provides
-                  essential functionality.
-                </CardDescription>
+                <CardTitle className="text-base font-mono">Project Overview</CardTitle>
               </CardHeader>
+              <CardDescription className="text-sm leading-relaxed italic font-mono">
+                "Give me a high-level overview of this project"
+              </CardDescription>
             </Card>
 
-            {/* Feature 2 */}
-            <Card>
-              <CardHeader>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Zap className="h-6 w-6 text-primary" />
+            {/* Example Question 2 - Blue */}
+            <Card className="p-4 text-center transition-all duration-200 hover:border-blue-500/50">
+              <CardHeader className="p-0 pb-2">
+                <div className="mb-3 flex justify-center">
+                  <Package className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <CardTitle>Feature 2</CardTitle>
-                <CardDescription>
-                  Placeholder description for feature 2. This feature enhances
-                  user experience.
-                </CardDescription>
+                <CardTitle className="text-base font-mono">Tech Stack Analysis</CardTitle>
               </CardHeader>
+              <CardDescription className="text-sm leading-relaxed italic font-mono">
+                "What is the tech stack?"
+              </CardDescription>
             </Card>
 
-            {/* Feature 3 */}
-            <Card>
-              <CardHeader>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Layers className="h-6 w-6 text-primary" />
+            {/* Example Question 3 - Green */}
+            <Card className="p-4 text-center transition-all duration-200 hover:border-green-500/50">
+              <CardHeader className="p-0 pb-2">
+                <div className="mb-3 flex justify-center">
+                  <Network className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <CardTitle>Feature 3</CardTitle>
-                <CardDescription>
-                  Placeholder description for feature 3. This feature improves
-                  productivity.
-                </CardDescription>
+                <CardTitle className="text-base font-mono">API Integration</CardTitle>
               </CardHeader>
+              <CardDescription className="text-sm leading-relaxed italic font-mono">
+                "What are the specific APIs being called?"
+              </CardDescription>
             </Card>
 
-            {/* Feature 4 */}
-            <Card>
-              <CardHeader>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
-                  <Shield className="h-6 w-6 text-primary" />
+            {/* Example Question 4 - Purple */}
+            <Card className="p-4 text-center transition-all duration-200 hover:border-purple-500/50">
+              <CardHeader className="p-0 pb-2">
+                <div className="mb-3 flex justify-center">
+                  <Workflow className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <CardTitle>Feature 4</CardTitle>
-                <CardDescription>
-                  Placeholder description for feature 4. This feature ensures
-                  reliability.
-                </CardDescription>
+                <CardTitle className="text-base font-mono">Business Flow</CardTitle>
               </CardHeader>
+              <CardDescription className="text-sm leading-relaxed italic font-mono">
+                "What is the login authentication flow?"
+              </CardDescription>
             </Card>
           </div>
         </div>
@@ -722,13 +748,13 @@ export default function Home() {
                     <div className="flex-1">
                       <h3
                         className={cn(
-                          "mb-1 font-semibold",
+                          "mb-1 font-semibold font-mono",
                           isSelected ? "text-foreground" : "text-muted-foreground"
                         )}
                       >
                         {feature.title}
                       </h3>
-                      <p className="text-sm text-muted-foreground">
+                      <p className="text-sm text-muted-foreground font-mono">
                         {feature.description}
                       </p>
                     </div>
@@ -746,14 +772,15 @@ export default function Home() {
                     return <Icon className="h-6 w-6" />;
                   })()}
                 </div>
-                <CardTitle className="text-2xl">{selectedFeature.title}</CardTitle>
-                <CardDescription className="text-base">
+                <CardTitle className="text-2xl font-mono">{selectedFeature.title}</CardTitle>
+                <CardDescription className="text-base font-mono">
                   {selectedFeature.description}
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground leading-relaxed">
-                  {selectedFeature.content}
+                <p className="text-muted-foreground leading-relaxed font-mono">
+                  {typedContent}
+                  {isTyping && <span className="animate-pulse">|</span>}
                 </p>
               </CardContent>
             </Card>
