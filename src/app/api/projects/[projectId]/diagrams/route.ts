@@ -178,13 +178,13 @@ export async function GET(
       // Use storage diagrams if available, fallback to database
       const finalBusinessFlow = storageDiagrams.businessFlow || null;
       const finalDataFlow = storageDiagrams.dataFlow || null;
-      const finalCombined = storageDiagrams.combined || projectData.board_mermaid || null;
+      const finalCombined = projectData.board_mermaid || null;
 
       console.log("✅ Returning diagrams for signed-in user:", {
         hasBusinessFlow: !!finalBusinessFlow,
         hasDataFlow: !!finalDataFlow,
         hasCombined: !!finalCombined,
-        source: (storageDiagrams.businessFlow || storageDiagrams.dataFlow || storageDiagrams.combined) 
+        source: (storageDiagrams.businessFlow || storageDiagrams.dataFlow) 
           ? 'storage+database' : 'database'
       });
 
@@ -195,7 +195,7 @@ export async function GET(
         combined: finalCombined,
         mermaidCode: finalCombined, // Backward compatibility
         updatedAt: projectData.board_updated_at || null,
-        source: (storageDiagrams.businessFlow || storageDiagrams.dataFlow || storageDiagrams.combined) 
+        source: (storageDiagrams.businessFlow || storageDiagrams.dataFlow) 
           ? 'storage+database' : 'database'
       });
     } else {

@@ -14,7 +14,6 @@ export interface IngestionResult {
   diagrams: {
     businessFlow: string;
     dataFlow: string;
-    combined: string;
   };
 }
 

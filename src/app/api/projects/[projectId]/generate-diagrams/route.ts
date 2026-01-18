@@ -120,8 +120,8 @@ export async function POST(
       diagrams: {
         businessFlow: diagrams.businessFlow,
         dataFlow: diagrams.dataFlow,
-        combined: diagrams.combined,
-        mermaidCode: diagrams.combined, // Backward compatibility
+        combined: null, // No longer used - kept for backward compatibility
+        mermaidCode: null, // No longer used - kept for backward compatibility
         updatedAt: new Date().toISOString()
       }
     });
