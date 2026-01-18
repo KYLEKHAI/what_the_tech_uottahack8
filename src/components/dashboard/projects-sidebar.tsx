@@ -1,48 +1,46 @@
 "use client";
 
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useDashboardStore } from "@/lib/stores/dashboard-store";
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
-import { ChevronLeft, ChevronRight, GitBranch } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { ChevronLeft, ChevronRight, GitBranch, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-// Mock projects data
-const mockProjects = [
-  {
-    id: "1",
-    name: "next.js",
-    repoUrl: "vercel/next.js",
-    status: "ready" as const,
-  },
-  {
-    id: "2",
-    name: "react",
-    repoUrl: "facebook/react",
-    status: "ready" as const,
-  },
-  {
-    id: "3",
-    name: "typescript",
-    repoUrl: "microsoft/TypeScript",
-    status: "ingesting" as const,
-  },
-];
-
 export function ProjectsSidebar() {
-  const { isSidebarCollapsed, toggleSidebar, selectedProjectId, setSelectedProject } =
-    useDashboardStore();
+  const router = useRouter();
+  const {
+    isSidebarCollapsed,
+    toggleSidebar,
+    projects,
+    selectedProjectId,
+    setSelectedProject,
+    deleteProject,
+  } = useDashboardStore();
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case "ready":
-        return "bg-green-500";
-      case "ingesting":
-        return "bg-yellow-500";
-      case "failed":
-        return "bg-red-500";
-      default:
-        return "bg-gray-500";
+  const [deleteConfirmId, setDeleteConfirmId] = useState<string | null>(null);
+
+  const handleDeleteClick = (e: React.MouseEvent, projectId: string) => {
+    e.stopPropagation(); // Prevent card click
+    setDeleteConfirmId(projectId);
+  };
+
+  const handleDeleteConfirm = (projectId: string) => {
+    const wasLastProject = projects.length === 1;
+    const wasSelected = selectedProjectId === projectId;
+
+    deleteProject(projectId);
+    setDeleteConfirmId(null);
+
+    // If it was the last project, redirect to home
+    if (wasLastProject) {
+      router.push("/");
     }
+  };
+
+  const handleDeleteCancel = () => {
+    setDeleteConfirmId(null);
   };
 
   return (
@@ -74,60 +72,146 @@ export function ProjectsSidebar() {
       {/* Projects List */}
       {!isSidebarCollapsed && (
         <div className="flex-1 overflow-y-auto p-2">
-          <div className="space-y-2">
-            {mockProjects.map((project) => (
-              <Card
-                key={project.id}
-                className={cn(
-                  "cursor-pointer p-3 transition-colors hover:bg-accent",
-                  selectedProjectId === project.id && "bg-primary/5 border-primary"
-                )}
-                onClick={() => setSelectedProject(project.id)}
-              >
-                <div className="flex items-start gap-2">
-                  <GitBranch className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2">
-                      <p className="truncate text-sm font-medium text-foreground">
-                        {project.name}
-                      </p>
-                      <div
-                        className={cn(
-                          "h-2 w-2 shrink-0 rounded-full",
-                          getStatusColor(project.status)
+          {projects.length === 0 ? (
+            <div className="flex h-full items-center justify-center p-4">
+              <p className="text-center text-sm text-muted-foreground">
+                No projects yet. Analyze a repository to get started.
+              </p>
+            </div>
+          ) : (
+            <div className="space-y-2">
+              {projects.map((project) => {
+                const isSelected = selectedProjectId === project.id;
+                const isDeleting = deleteConfirmId === project.id;
+
+                return (
+                  <div key={project.id} className="relative">
+                    <Card
+                      className={cn(
+                        "group cursor-pointer p-3 transition-all",
+                        isSelected
+                          ? "bg-primary/20 border-primary border-2 shadow-md"
+                          : "border-border hover:bg-accent"
+                      )}
+                      onClick={() => setSelectedProject(project.id)}
+                    >
+                      <div className="flex items-start gap-2">
+                        <GitBranch className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2">
+                            <p
+                              className={cn(
+                                "truncate text-sm font-medium",
+                                isSelected ? "text-primary font-semibold" : "text-foreground"
+                              )}
+                            >
+                              {project.name}
+                            </p>
+                            {/* Status dot - green for selected, yellow for others */}
+                            <div
+                              className={cn(
+                                "h-2.5 w-2.5 shrink-0 rounded-full",
+                                isSelected ? "bg-green-500" : "bg-yellow-500"
+                              )}
+                              title={isSelected ? "Active" : "Available"}
+                            />
+                          </div>
+                          <p className="truncate text-xs text-muted-foreground">
+                            {project.repoUrl}
+                          </p>
+                        </div>
+                        {/* Trash icon - only show on hover */}
+                        {!isDeleting && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-6 w-6 shrink-0 opacity-0 transition-opacity group-hover:opacity-100"
+                            onClick={(e) => handleDeleteClick(e, project.id)}
+                          >
+                            <Trash2 className="h-3.5 w-3.5 text-destructive" />
+                          </Button>
                         )}
-                        title={project.status}
-                      />
-                    </div>
-                    <p className="truncate text-xs text-muted-foreground">
-                      {project.repoUrl}
-                    </p>
+                      </div>
+                    </Card>
+
                   </div>
-                </div>
-              </Card>
-            ))}
-          </div>
+                );
+              })}
+            </div>
+          )}
         </div>
       )}
 
       {/* Collapsed state - just icons */}
       {isSidebarCollapsed && (
         <div className="flex flex-col items-center gap-2 p-2">
-          {mockProjects.map((project) => (
-            <Button
-              key={project.id}
-              variant="ghost"
-              size="icon"
-              className={cn(
-                "h-10 w-10",
-                selectedProjectId === project.id && "bg-primary/10"
+          {projects.map((project) => {
+            const isSelected = selectedProjectId === project.id;
+            return (
+              <Button
+                key={project.id}
+                variant="ghost"
+                size="icon"
+                className={cn(
+                  "relative h-10 w-10",
+                  isSelected && "bg-primary/20"
+                )}
+                onClick={() => setSelectedProject(project.id)}
+                title={project.name}
+              >
+                <GitBranch className="h-4 w-4" />
+                {/* Status dot in collapsed view */}
+                <div
+                  className={cn(
+                    "absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full border-2 border-card",
+                    isSelected ? "bg-green-500" : "bg-yellow-500"
+                  )}
+                />
+              </Button>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Delete Confirmation Modal - Full Screen Overlay */}
+      {deleteConfirmId && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          onClick={handleDeleteCancel}
+        >
+          <Card
+            className="w-full max-w-md border-2 border-destructive/50 bg-card shadow-xl"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <CardContent className="flex flex-col gap-4 p-6">
+              <p className="text-center text-base font-medium text-foreground">
+                Are you sure you want to delete this repository?
+              </p>
+              {projects.length === 1 && (
+                <p className="text-center text-sm text-muted-foreground">
+                  This is your only project. You will be redirected to the home page after deletion.
+                </p>
               )}
-              onClick={() => setSelectedProject(project.id)}
-              title={project.name}
-            >
-              <GitBranch className="h-4 w-4" />
-            </Button>
-          ))}
+              <div className="flex justify-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleDeleteCancel}
+                  className="min-w-[80px]"
+                >
+                  No
+                </Button>
+                <Button
+                  variant="destructive"
+                  size="sm"
+                  onClick={() => handleDeleteConfirm(deleteConfirmId)}
+                  className="min-w-[80px]"
+                >
+                  Yes
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       )}
     </div>

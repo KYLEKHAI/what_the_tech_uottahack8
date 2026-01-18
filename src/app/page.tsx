@@ -7,7 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCircle, Loader2 } from "lucide-react";
+import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCircle, Loader2, CheckCircle2, FileCode } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "@/lib/stores/dashboard-store";
 
@@ -46,10 +46,18 @@ export default function Home() {
   const [selectedFeature, setSelectedFeature] = useState(features[0]);
   const [repoUrl, setRepoUrl] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [loadingStep, setLoadingStep] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [isErrorVisible, setIsErrorVisible] = useState(false);
   const router = useRouter();
-  const setCurrentRepoUrl = useDashboardStore((state) => state.setCurrentRepoUrl);
+  const { setCurrentRepoUrl, addProject } = useDashboardStore();
+
+  const loadingSteps = [
+    { label: "Validating repository", icon: CheckCircle2 },
+    { label: "Cloning repository", icon: GitBranch },
+    { label: "Analyzing codebase", icon: FileCode },
+    { label: "Generating context", icon: Sparkles },
+  ];
 
   const validateGitHubUrl = (url: string): boolean => {
     try {
@@ -117,6 +125,23 @@ export default function Home() {
     }
 
     setIsLoading(true);
+    setLoadingStep(0);
+
+    // Simulate progress steps for better UX with variable timing
+    const stepTimings = [1500, 3000, 2500, 2000]; // ms for each step
+    let currentStepIndex = 0;
+    let timeoutId: NodeJS.Timeout | null = null;
+    
+    const advanceStep = () => {
+      if (currentStepIndex < loadingSteps.length - 1) {
+        currentStepIndex++;
+        setLoadingStep(currentStepIndex);
+        timeoutId = setTimeout(advanceStep, stepTimings[currentStepIndex] || 2000);
+      }
+    };
+    
+    // Start the first step after initial delay
+    timeoutId = setTimeout(advanceStep, stepTimings[0]);
 
     try {
       const response = await fetch("/api/projects/ingest", {
@@ -134,22 +159,37 @@ export default function Home() {
       }
 
       if (data.success && data.data) {
+        if (timeoutId) clearTimeout(timeoutId);
+        // Ensure all steps are marked as completed
+        setLoadingStep(loadingSteps.length - 1);
+        
         const repoName = `${data.data.repoInfo.owner}-${data.data.repoInfo.name}`;
+        const projectId = `${data.data.repoInfo.owner}-${data.data.repoInfo.name}-${Date.now()}`;
         
         // Download XML file
         if (data.data.xmlContent) {
           downloadXML(data.data.xmlContent, repoName);
         }
 
-        // Store repo URL in dashboard store
-        setCurrentRepoUrl(normalizedUrl);
+        // Add project to store and select it (this also sets currentRepoUrl)
+        addProject({
+          id: projectId,
+          name: data.data.repoInfo.name,
+          repoUrl: `${data.data.repoInfo.owner}/${data.data.repoInfo.name}`,
+          owner: data.data.repoInfo.owner,
+          repo: data.data.repoInfo.name,
+          status: "ready",
+        });
 
-        // Redirect to dashboard
-        router.push("/app");
+        // Small delay before redirect to show completion
+        setTimeout(() => {
+          router.push("/app");
+        }, 800);
       } else {
         throw new Error("Unexpected response format");
       }
     } catch (err) {
+      if (timeoutId) clearTimeout(timeoutId);
       console.error("Ingestion error:", err);
       let errorMessage = "Failed to process repository. Please try again.";
       
@@ -168,7 +208,9 @@ export default function Home() {
       
       setError(errorMessage);
     } finally {
+      if (timeoutId) clearTimeout(timeoutId);
       setIsLoading(false);
+      setLoadingStep(0);
     }
   };
 
@@ -259,7 +301,7 @@ export default function Home() {
           {/* Subtitle/slogan */}
           <p className="text-lg text-muted-foreground sm:text-xl">
             Ever wondered{" "}
-            <span className="italic line-through">what the heck</span>{" "}
+            <span className="italic line-through font-bold">what the heck</span>{" "}
             <span className="animate-fade-color font-bold">what the tech</span> is behind
             a project on Github?
           </p>
@@ -268,7 +310,7 @@ export default function Home() {
           </p>
 
           {/* GitHub repo URL input (Primary CTA) */}
-          <div className="relative w-full max-w-lg">
+          <div className="relative w-full max-w-lg overflow-visible">
             <Card className="w-full border-2 shadow-lg animate-border-glow py-4 gap-4">
               <CardContent className="p-4">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
@@ -291,10 +333,13 @@ export default function Home() {
                     disabled={isLoading || !repoUrl.trim()}
                   >
                     {isLoading ? (
-                      <>
-                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                        Processing...
-                      </>
+                      <div className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        <span className="hidden sm:inline">
+                          {loadingSteps[loadingStep]?.label || "Processing"}...
+                        </span>
+                        <span className="sm:hidden">Processing...</span>
+                      </div>
                     ) : (
                       "Analyze Repository"
                     )}
@@ -303,16 +348,109 @@ export default function Home() {
               </CardContent>
             </Card>
 
+            {/* Enhanced Progress Indicator */}
+            {isLoading && (
+              <Card className="mt-4 w-full max-w-lg border-2 bg-card/50 backdrop-blur-sm animate-in fade-in slide-in-from-top-2 duration-300">
+                <CardContent className="p-4">
+                  {/* Progress Bar */}
+                  <div className="mb-4">
+                    <div className="mb-2 flex items-center justify-between text-xs">
+                      <span className="font-medium text-muted-foreground">Processing repository</span>
+                      <span className="font-semibold text-primary">
+                        {Math.round(((loadingStep + 1) / loadingSteps.length) * 100)}%
+                      </span>
+                    </div>
+                    <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
+                      <div
+                        className="h-full bg-primary transition-all duration-500 ease-out"
+                        style={{
+                          width: `${((loadingStep + 1) / loadingSteps.length) * 100}%`,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Steps */}
+                  <div className="space-y-3">
+                    {loadingSteps.map((step, index) => {
+                      const StepIcon = step.icon;
+                      const isActive = index === loadingStep;
+                      const isCompleted = index < loadingStep;
+                      const isPending = index > loadingStep;
+                      
+                      return (
+                        <div
+                          key={index}
+                          className={cn(
+                            "flex items-center gap-3 rounded-lg border p-3 transition-all duration-300",
+                            isActive
+                              ? "border-primary/50 bg-primary/5 shadow-sm"
+                              : isCompleted
+                              ? "border-primary/30 bg-primary/5"
+                              : "border-border bg-background opacity-60"
+                          )}
+                        >
+                          {/* Icon */}
+                          <div
+                            className={cn(
+                              "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border-2 transition-all duration-300",
+                              isCompleted
+                                ? "border-primary bg-primary text-primary-foreground shadow-sm"
+                                : isActive
+                                ? "border-primary bg-primary/10 text-primary shadow-md ring-2 ring-primary/20 animate-pulse"
+                                : "border-border bg-muted text-muted-foreground"
+                            )}
+                          >
+                            {isCompleted ? (
+                              <CheckCircle2 className="h-4 w-4" />
+                            ) : isActive ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <StepIcon className="h-4 w-4" />
+                            )}
+                          </div>
+
+                          {/* Label */}
+                          <div className="flex-1">
+                            <p
+                              className={cn(
+                                "text-sm font-medium transition-colors",
+                                isActive && "text-primary",
+                                isCompleted && "text-primary/80",
+                                isPending && "text-muted-foreground"
+                              )}
+                            >
+                              {step.label}
+                            </p>
+                            {isActive && (
+                              <p className="mt-0.5 text-xs text-muted-foreground">
+                                This may take a few moments...
+                              </p>
+                            )}
+                          </div>
+
+                          {/* Status Indicator */}
+                          {isCompleted && (
+                            <div className="text-xs font-medium text-primary">Done</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Floating Error Alert - Positioned at bottom of card area */}
             {error && (
               <div
                 className={cn(
-                  "absolute -bottom-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-lg border border-destructive/50 bg-card shadow-lg px-4 py-3 text-sm transition-all duration-300 max-w-md whitespace-nowrap",
+                  "absolute -bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-start gap-2 rounded-lg border border-destructive/50 bg-card shadow-lg px-4 py-3 text-sm transition-all duration-300 max-w-[calc(100vw-2rem)] sm:max-w-lg md:max-w-xl",
                   isErrorVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
                 )}
               >
-                <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
-                <span className="text-destructive font-bold">{error}</span>
+                <AlertCircle className="h-4 w-4 shrink-0 text-destructive mt-0.5" />
+                <span className="text-destructive font-bold break-words min-w-0">{error}</span>
               </div>
             )}
           </div>
