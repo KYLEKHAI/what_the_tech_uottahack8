@@ -7,11 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { DashboardHeader } from "@/components/dashboard/dashboard-header";
-import { ArrowLeft, Eye, EyeOff, LogOut, Edit2, User, Shield, Loader2 } from "lucide-react";
+import { ArrowLeft, Eye, EyeOff, LogOut, Edit2, User, Shield, Loader2, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
-import { getUserProfile, updateUserProfile, updateUserPassword, verifyUserPassword } from "@/lib/supabase";
+import { getUserProfile, updateUserProfile, updateUserPassword, verifyUserPassword, deleteUserAccount } from "@/lib/supabase";
 import { handleSignOut as signOutUtil } from "@/lib/auth-utils";
 
 export default function SettingsPage() {
@@ -247,6 +247,45 @@ export default function SettingsPage() {
     await signOutUtil();
   };
 
+  const handleDeleteAccount = async () => {
+    // Show confirmation dialog
+    const confirmed = confirm('Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.');
+    if (!confirmed) return;
+
+    // Show second confirmation for extra safety
+    const doubleConfirmed = confirm('This will permanently delete your account and all associated data. Type your confirmation by clicking OK if you are absolutely sure.');
+    if (!doubleConfirmed) return;
+
+    if (!user?.id) {
+      alert('User not found. Please try logging in again.');
+      return;
+    }
+
+    setIsSaving(true);
+
+    try {
+      const result = await deleteUserAccount(user.id);
+      
+      if (result.success) {
+        // Sign out the user
+        await signOutUtil();
+        
+        // Show success message
+        alert('Your account has been successfully deleted.');
+        
+        // Redirect to home page
+        router.push('/');
+      } else {
+        alert(`Failed to delete account: ${result.error}`);
+      }
+    } catch (error) {
+      console.error('Delete account error:', error);
+      alert('An unexpected error occurred while deleting your account. Please try again.');
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const fullName = userProfile ? `${userProfile.first_name || ""} ${userProfile.last_name || ""}`.trim() : "User";
   const initials = userProfile ? 
     `${userProfile.first_name?.[0] || ""}${userProfile.last_name?.[0] || ""}`.toUpperCase() || "U" : "U";
@@ -255,6 +294,7 @@ export default function SettingsPage() {
     { id: "account", label: "Account Information", icon: User },
     { id: "security", label: "Security", icon: Shield },
     { id: "signout", label: "Sign Out", icon: LogOut },
+    { id: "deleteaccount", label: "Delete Account", icon: AlertTriangle },
   ];
 
   if (isLoadingProfile) {
@@ -560,12 +600,40 @@ export default function SettingsPage() {
                 </CardHeader>
                 <CardContent>
                   <Button
-                    variant="destructive"
+                    variant="outline"
                     onClick={handleSignOut}
-                    className="w-full sm:w-auto"
+                    className="w-full sm:w-auto text-black border-black hover:bg-black hover:text-white"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Delete Account Section */}
+              <Card id="deleteaccount" className="border-red-600">
+                <CardHeader>
+                  <CardTitle className="text-red-600">Delete Account</CardTitle>
+                  <CardDescription>Permanently delete your account and all associated data. This action cannot be undone.</CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Button
+                    variant="destructive"
+                    onClick={handleDeleteAccount}
+                    disabled={isSaving}
+                    className="w-full sm:w-auto"
+                  >
+                    {isSaving ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Deleting Account...
+                      </>
+                    ) : (
+                      <>
+                        <AlertTriangle className="mr-2 h-4 w-4" />
+                        Delete Account
+                      </>
+                    )}
                   </Button>
                 </CardContent>
               </Card>
