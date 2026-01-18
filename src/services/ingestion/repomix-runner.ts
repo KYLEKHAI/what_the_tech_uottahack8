@@ -53,34 +53,18 @@ export async function runRepomix(
 
 /**
  * Get repository metadata (branch, commit, etc.)
+ * Since we download via GitHub API, we use the default branch info
  */
-export async function getRepoMetadata(repoPath: string): Promise<{
+export async function getRepoMetadata(repoPath: string, branch: string = "main"): Promise<{
   branch: string;
   commit: string;
   commitMessage?: string;
 }> {
-  try {
-    const { stdout: branch } = await execAsync("git rev-parse --abbrev-ref HEAD", {
-      cwd: repoPath,
-    });
-    
-    const { stdout: commit } = await execAsync("git rev-parse HEAD", {
-      cwd: repoPath,
-    });
-    
-    const { stdout: commitMessage } = await execAsync(
-      "git log -1 --pretty=%B",
-      { cwd: repoPath }
-    ).catch(() => ({ stdout: "" }));
-
-    return {
-      branch: branch.trim(),
-      commit: commit.trim(),
-      commitMessage: commitMessage.trim() || undefined,
-    };
-  } catch (error) {
-    throw new Error(
-      `Failed to get repository metadata: ${error instanceof Error ? error.message : String(error)}`
-    );
-  }
+  // When downloading from GitHub API, we don't have git history
+  // Return the branch that was successfully downloaded
+  return {
+    branch: branch,
+    commit: "latest", // We don't have commit hash from ZIP download
+    commitMessage: "Downloaded from GitHub",
+  };
 }

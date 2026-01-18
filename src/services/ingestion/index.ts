@@ -30,11 +30,12 @@ export async function ingestRepository(
     // 1. Parse and validate repository URL
     const repoInfo = parseGitHubUrl(repoUrl);
 
-    // 2. Clone repository to temporary directory
-    tempDir = await cloneRepository(repoInfo);
+    // 2. Download repository to temporary directory
+    const cloneResult = await cloneRepository(repoInfo);
+    tempDir = cloneResult.path;
 
-    // 3. Get repository metadata
-    const metadata = await getRepoMetadata(tempDir);
+    // 3. Get repository metadata (using downloaded branch info)
+    const metadata = await getRepoMetadata(tempDir, cloneResult.branch);
 
     // 4. Run Repomix to generate XML context
     const xmlContent = await runRepomix(tempDir, {
