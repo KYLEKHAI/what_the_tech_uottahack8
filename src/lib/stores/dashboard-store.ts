@@ -1,5 +1,14 @@
 import { create } from "zustand";
 
+export interface ProjectItem {
+  id: string;
+  name: string;
+  repoUrl: string;
+  owner: string;
+  repo: string;
+  status: "ready" | "ingesting" | "failed";
+}
+
 interface DashboardStore {
   // Sidebar state
   isSidebarCollapsed: boolean;
@@ -8,6 +17,12 @@ interface DashboardStore {
   // Board panel state
   isBoardCollapsed: boolean;
   toggleBoard: () => void;
+
+  // Projects management
+  projects: ProjectItem[];
+  addProject: (project: ProjectItem) => void;
+  deleteProject: (projectId: string) => void;
+  getProjectById: (projectId: string) => ProjectItem | undefined;
 
   // Selected project
   selectedProjectId: string | null;
@@ -23,7 +38,7 @@ interface DashboardStore {
   setCurrentRepoUrl: (url: string | null) => void;
 }
 
-export const useDashboardStore = create<DashboardStore>((set) => ({
+export const useDashboardStore = create<DashboardStore>((set, get) => ({
   // Sidebar state
   isSidebarCollapsed: false,
   toggleSidebar: () =>
@@ -34,9 +49,60 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
   toggleBoard: () =>
     set((state) => ({ isBoardCollapsed: !state.isBoardCollapsed })),
 
+  // Projects management
+  projects: [],
+  addProject: (project) =>
+    set((state) => {
+      // Check if project already exists
+      const exists = state.projects.some((p) => p.id === project.id);
+      if (exists) return state;
+      
+      return {
+        projects: [...state.projects, project],
+        selectedProjectId: project.id, // Auto-select new project
+        currentRepoUrl: `https://github.com/${project.owner}/${project.repo}`,
+      };
+    }),
+  deleteProject: (projectId) =>
+    set((state) => {
+      const newProjects = state.projects.filter((p) => p.id !== projectId);
+      const wasSelected = state.selectedProjectId === projectId;
+      
+      // If deleted project was selected, select another one or clear selection
+      let newSelectedId: string | null = null;
+      if (wasSelected && newProjects.length > 0) {
+        newSelectedId = newProjects[0].id;
+        const selectedProject = newProjects[0];
+        return {
+          projects: newProjects,
+          selectedProjectId: newSelectedId,
+          currentRepoUrl: `https://github.com/${selectedProject.owner}/${selectedProject.repo}`,
+        };
+      }
+      
+      return {
+        projects: newProjects,
+        selectedProjectId: newSelectedId,
+        currentRepoUrl: newSelectedId ? state.currentRepoUrl : null,
+      };
+    }),
+  getProjectById: (projectId) => {
+    const state = get();
+    return state.projects.find((p) => p.id === projectId);
+  },
+
   // Selected project
   selectedProjectId: null,
-  setSelectedProject: (projectId) => set({ selectedProjectId: projectId }),
+  setSelectedProject: (projectId) => {
+    const state = get();
+    const project = projectId ? state.getProjectById(projectId) : null;
+    set({
+      selectedProjectId: projectId,
+      currentRepoUrl: project
+        ? `https://github.com/${project.owner}/${project.repo}`
+        : state.currentRepoUrl,
+    });
+  },
 
   // Panel widths
   chatPanelWidth: 60, // percentage
@@ -45,6 +111,6 @@ export const useDashboardStore = create<DashboardStore>((set) => ({
     set({ chatPanelWidth: chat, boardPanelWidth: board }),
 
   // Current repository
-  currentRepoUrl: "https://github.com/owner/repo", // Default mock repo, will be set from home page
+  currentRepoUrl: null,
   setCurrentRepoUrl: (url) => set({ currentRepoUrl: url }),
 }));
