@@ -334,46 +334,54 @@ export async function deleteProject(projectId: string) {
   try {
     console.log(`Deleting project ${projectId} and all associated artifacts...`);
     
-    // First, get artifact records to delete storage files
-    const { data: artifacts, error: artifactsError } = await supabase
-      .from('repo_artifacts')
-      .select('storage_path')
-      .eq('project_id', projectId);
+    // Delete entire project folder from storage (more robust than individual files)
+    // This deletes all files in the projectId/ folder
+    const projectFolder = `${projectId}/`;
+    const { data: folderFiles, error: listError } = await supabase.storage
+      .from('repo-artifacts')
+      .list(projectFolder, {
+        limit: 1000,
+        offset: 0,
+      });
 
-    if (artifactsError) {
-      console.error("Error fetching artifacts for deletion:", artifactsError);
-      // Continue with deletion even if we can't fetch artifacts
-    } else if (artifacts && artifacts.length > 0) {
-      // Delete storage files
-      for (const artifact of artifacts) {
-        if (artifact.storage_path) {
-          const { error: storageError } = await supabase.storage
-            .from('repo-artifacts')
-            .remove([artifact.storage_path]);
+    if (listError) {
+      console.warn(`Could not list files in folder ${projectFolder}:`, listError);
+      // Continue with deletion even if listing fails
+    } else if (folderFiles && folderFiles.length > 0) {
+      // Build list of all file paths in the folder
+      const filePaths = folderFiles.map(file => `${projectFolder}${file.name}`);
+      
+      // Delete all files in the folder
+      const { error: storageError } = await supabase.storage
+        .from('repo-artifacts')
+        .remove(filePaths);
 
-          if (storageError) {
-            console.error(`Error deleting storage file ${artifact.storage_path}:`, storageError);
-            // Continue with deletion even if storage deletion fails
-          } else {
-            console.log(`✓ Deleted storage file: ${artifact.storage_path}`);
-          }
+      if (storageError) {
+        console.error(`Error deleting storage files in folder ${projectFolder}:`, storageError);
+        console.error('Storage error details:', JSON.stringify(storageError, null, 2));
+        // Check if it's a permissions error
+        if (storageError.message?.includes('permission') || storageError.message?.includes('policy')) {
+          console.error('⚠️ Missing DELETE RLS policy on storage.objects. Please create a DELETE policy in Supabase Storage.');
         }
-      }
-
-      // Delete artifact records from database
-      const { error: deleteArtifactsError } = await supabase
-        .from('repo_artifacts')
-        .delete()
-        .eq('project_id', projectId);
-
-      if (deleteArtifactsError) {
-        console.error("Error deleting artifact records:", deleteArtifactsError);
-        return { error: deleteArtifactsError.message };
+        // Continue with deletion even if storage deletion fails
       } else {
-        console.log(`✓ Deleted ${artifacts.length} artifact record(s) from repo_artifacts table`);
+        console.log(`✓ Deleted ${filePaths.length} file(s) from storage folder ${projectFolder}`);
       }
     } else {
-      console.log("No artifacts found for project, proceeding with project deletion");
+      console.log(`No files found in storage folder ${projectFolder}`);
+    }
+
+    // Delete artifact records from database
+    const { error: deleteArtifactsError } = await supabase
+      .from('repo_artifacts')
+      .delete()
+      .eq('project_id', projectId);
+
+    if (deleteArtifactsError) {
+      console.error("Error deleting artifact records:", deleteArtifactsError);
+      // Continue with project deletion even if artifact deletion fails
+    } else {
+      console.log(`✓ Deleted artifact records from repo_artifacts table`);
     }
 
     // Finally, delete the project itself
