@@ -127,7 +127,7 @@ export function DashboardHeader() {
               </div>
               <div className="mt-2 text-center">
                 <Link href="/signin">
-                  <Button variant="link" size="sm" className="text-primary">
+                  <Button variant="link" size="sm" style={{color: 'rgb(0,201,80)'}} className="hover:underline">
                     Sign in to save multiple projects
                   </Button>
                 </Link>

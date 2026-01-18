@@ -1,6 +1,6 @@
 "use client";
 
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -65,7 +65,10 @@ export function ProfileDropdown({ userProfile }: ProfileDropdownProps) {
       <DropdownMenuTrigger asChild>
         <button className="flex items-center space-x-2 p-1 rounded-full hover:bg-gray-100 transition-colors">
           <Avatar className="w-8 h-8">
-            <AvatarFallback className="bg-blue-600 text-white text-sm">
+            {userProfile?.avatar_url && (
+              <AvatarImage src={userProfile.avatar_url} alt="Profile" />
+            )}
+            <AvatarFallback className="bg-black text-white text-sm">
               {getInitials()}
             </AvatarFallback>
           </Avatar>
@@ -101,7 +104,7 @@ export function ProfileDropdown({ userProfile }: ProfileDropdownProps) {
               <LogIn className="mr-2 h-4 w-4" />
               <span>Sign In</span>
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleSignUp} className="cursor-pointer text-blue-600 focus:text-blue-600">
+            <DropdownMenuItem onClick={handleSignUp} className="cursor-pointer focus:text-white" style={{color: 'rgb(0,201,80)'}}>
               <UserPlus className="mr-2 h-4 w-4" />
               <span>Sign Up</span>
             </DropdownMenuItem>
