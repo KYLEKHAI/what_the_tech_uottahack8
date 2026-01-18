@@ -14,6 +14,46 @@ import { useDashboardStore } from "@/lib/stores/dashboard-store";
 import { useAuth } from "@/components/providers/auth-provider";
 import { supabase } from "@/lib/supabase";
 
+const normalizeMarkdown = (content: string) => {
+  const lines = content.replace(/\r\n/g, "\n").split("\n");
+  const output: string[] = [];
+  let paragraph = "";
+
+  const flushParagraph = () => {
+    if (paragraph.trim()) {
+      output.push(paragraph.trim());
+      paragraph = "";
+    }
+  };
+
+  const isBlockLine = (line: string) =>
+    /^#{1,6}\s+/.test(line) ||
+    /^[-*+]\s+/.test(line) ||
+    /^\d+\.\s+/.test(line) ||
+    /^>\s+/.test(line) ||
+    /^---+$/.test(line);
+
+  for (const rawLine of lines) {
+    const line = rawLine.trim();
+
+    if (!line) {
+      flushParagraph();
+      continue;
+    }
+
+    if (isBlockLine(line)) {
+      flushParagraph();
+      output.push(line);
+      continue;
+    }
+
+    paragraph = paragraph ? `${paragraph} ${line}` : line;
+  }
+
+  flushParagraph();
+  return output.join("\n\n");
+};
+
 // Preset question bubbles
 const presetQuestions = [
   "What is this project about?",
@@ -505,7 +545,7 @@ export function AgentChat() {
                 >
                   <Card
                     className={cn(
-                      "max-w-[80%] p-3",
+                      "max-w-[95%] p-3",
                       message.role === "user"
                         ? "bg-primary text-primary-foreground"
                         : "bg-card text-card-foreground"
@@ -514,29 +554,38 @@ export function AgentChat() {
                     {message.role === "user" ? (
                       <p className="text-sm leading-relaxed">{message.content}</p>
                     ) : (
-                      <div className="text-sm leading-relaxed prose prose-sm max-w-none dark:prose-invert">
+                      <div className="text-sm leading-relaxed">
                         <ReactMarkdown 
                           remarkPlugins={[remarkGfm]}
                           components={{
                             // Custom styling for markdown elements
-                            h1: ({node, ...props}: any) => <h1 className="text-lg font-bold mb-2" {...props} />,
-                            h2: ({node, ...props}: any) => <h2 className="text-md font-semibold mb-2" {...props} />,
-                            h3: ({node, ...props}: any) => <h3 className="text-sm font-medium mb-1" {...props} />,
-                            p: ({node, ...props}: any) => <p className="mb-2" {...props} />,
-                            ul: ({node, ...props}: any) => <ul className="mb-2 ml-4 list-disc" {...props} />,
-                            ol: ({node, ...props}: any) => <ol className="mb-2 ml-4 list-decimal" {...props} />,
-                            li: ({node, ...props}: any) => <li className="mb-1" {...props} />,
+                            h1: ({node, ...props}: any) => <h1 className="text-lg font-bold mb-4 mt-6 block first:mt-0" {...props} />,
+                            h2: ({node, ...props}: any) => <h2 className="text-base font-semibold mb-3 mt-5 block first:mt-0" {...props} />,
+                            h3: ({node, ...props}: any) => <h3 className="text-sm font-medium mb-2 mt-4 block first:mt-0" {...props} />,
+                            p: ({node, ...props}: any) => <p className="mb-3 block whitespace-normal break-words" {...props} />,
+                            ul: ({node, ...props}: any) => <ul className="mb-4 ml-6 list-disc block space-y-1" {...props} />,
+                            ol: ({node, ...props}: any) => <ol className="mb-4 ml-6 list-decimal block space-y-1" {...props} />,
+                            li: ({node, ...props}: any) => <li className="mb-1.5 block" {...props} />,
                             code: ({node, ...props}: any) => {
                               const inline = 'inline' in props && props.inline;
-                              return inline 
-                                ? <code className="bg-muted px-1 py-0.5 rounded text-xs" {...props} />
-                                : <code className="block bg-muted p-2 rounded text-xs mb-2 whitespace-pre-wrap" {...props} />;
+                              if (inline) {
+                                return <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono inline" {...props} />;
+                              }
+                              // Render code blocks as plain text paragraphs
+                              return <p className="text-sm mb-4 font-mono whitespace-pre-wrap block break-words" {...props} />;
                             },
+                            pre: ({node, ...props}: any) => {
+                              // Render pre blocks as plain text paragraphs
+                              return <p className="text-sm mb-4 font-mono whitespace-pre-wrap block break-words" {...props} />;
+                            },
+                            hr: ({node, ...props}: any) => <hr className="my-6 border-border block" {...props} />,
+                            br: ({node, ...props}: any) => <br className="block" {...props} />,
                             strong: ({node, ...props}: any) => <strong className="font-semibold" {...props} />,
                             em: ({node, ...props}: any) => <em className="italic" {...props} />,
+                            blockquote: ({node, ...props}: any) => <blockquote className="border-l-4 border-muted pl-4 my-3 italic block" {...props} />,
                           }}
                         >
-                          {message.content}
+                          {normalizeMarkdown(message.content)}
                         </ReactMarkdown>
                       </div>
                     )}

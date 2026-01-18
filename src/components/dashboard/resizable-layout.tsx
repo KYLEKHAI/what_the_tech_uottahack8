@@ -12,8 +12,8 @@ export function ResizableLayout() {
     <Group orientation="horizontal" className="h-full">
       {/* Agent Chat Panel */}
       <Panel 
-        defaultSize={isBoardCollapsed ? 96 : 60} 
-        minSize={50} 
+        defaultSize={isBoardCollapsed ? 96 : 70} 
+        minSize={60} 
         collapsible={false}
       >
         <AgentChat />
@@ -27,8 +27,8 @@ export function ResizableLayout() {
       {/* Board Panel - Use key to force re-render when collapsed state changes */}
       <Panel 
         key={isBoardCollapsed ? "collapsed" : "expanded"}
-        defaultSize={isBoardCollapsed ? 4 : 40} 
-        minSize={isBoardCollapsed ? 4 : 50}
+        defaultSize={isBoardCollapsed ? 4 : 30} 
+        minSize={isBoardCollapsed ? 4 : 30}
         collapsible={false}
       >
         <BoardPanel />
