@@ -15,43 +15,74 @@ import { useAuth } from "@/components/providers/auth-provider";
 import { supabase } from "@/lib/supabase";
 
 const normalizeMarkdown = (content: string) => {
-  const lines = content.replace(/\r\n/g, "\n").split("\n");
-  const output: string[] = [];
-  let paragraph = "";
+  // Normalize line endings
+  let text = content.replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  
+  // Remove inline code and code blocks
+  text = text
+    // Remove inline code (`code`) - replace with just the text
+    .replace(/`([^`]+)`/g, "$1")
+    // Remove code blocks (```code```) - remove entirely
+    .replace(/```[\s\S]*?```/g, "");
+  
+  // Split by double newlines (paragraph breaks) first
+  const paragraphs = text.split(/\n\n+/);
+  const normalized: string[] = [];
 
-  const flushParagraph = () => {
-    if (paragraph.trim()) {
-      output.push(paragraph.trim());
-      paragraph = "";
-    }
+  const isBlockElement = (line: string) => {
+    const trimmed = line.trim();
+    return (
+      /^#{1,6}\s+/.test(trimmed) ||      // Headers
+      /^[-*+]\s+/.test(trimmed) ||       // Bullet lists
+      /^\d+\.\s+/.test(trimmed) ||       // Numbered lists
+      /^>\s+/.test(trimmed) ||           // Blockquotes
+      /^---+$/.test(trimmed)             // Horizontal rules
+    );
   };
 
-  const isBlockLine = (line: string) =>
-    /^#{1,6}\s+/.test(line) ||
-    /^[-*+]\s+/.test(line) ||
-    /^\d+\.\s+/.test(line) ||
-    /^>\s+/.test(line) ||
-    /^---+$/.test(line);
+  for (const para of paragraphs) {
+    const lines = para.split("\n");
+    const blockElements: string[] = [];
+    let currentText: string[] = [];
 
-  for (const rawLine of lines) {
-    const line = rawLine.trim();
+    const flushText = () => {
+      if (currentText.length > 0) {
+        const joined = currentText.join(" ").replace(/\s+/g, " ").trim();
+        if (joined) {
+          blockElements.push(joined);
+        }
+        currentText = [];
+      }
+    };
 
-    if (!line) {
-      flushParagraph();
-      continue;
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const trimmed = line.trim();
+      
+      // Empty line - skip
+      if (!trimmed) {
+        continue;
+      }
+
+      // Block-level elements - flush text and add as-is
+      if (isBlockElement(trimmed)) {
+        flushText();
+        blockElements.push(line);
+      } else {
+        // Everything else - add to current paragraph
+        // This ensures file paths like "skills/" get collapsed into the paragraph
+        currentText.push(trimmed);
+      }
     }
 
-    if (isBlockLine(line)) {
-      flushParagraph();
-      output.push(line);
-      continue;
+    flushText();
+    
+    if (blockElements.length > 0) {
+      normalized.push(blockElements.join("\n"));
     }
-
-    paragraph = paragraph ? `${paragraph} ${line}` : line;
   }
 
-  flushParagraph();
-  return output.join("\n\n");
+  return normalized.join("\n\n");
 };
 
 // Preset question bubbles
@@ -567,16 +598,12 @@ export function AgentChat() {
                             ol: ({node, ...props}: any) => <ol className="mb-4 ml-6 list-decimal block space-y-1" {...props} />,
                             li: ({node, ...props}: any) => <li className="mb-1.5 block" {...props} />,
                             code: ({node, ...props}: any) => {
-                              const inline = 'inline' in props && props.inline;
-                              if (inline) {
-                                return <code className="bg-muted px-1.5 py-0.5 rounded text-xs font-mono inline" {...props} />;
-                              }
-                              // Render code blocks as plain text paragraphs
-                              return <p className="text-sm mb-4 font-mono whitespace-pre-wrap block break-words" {...props} />;
+                              // Don't render code at all - return empty
+                              return null;
                             },
                             pre: ({node, ...props}: any) => {
-                              // Render pre blocks as plain text paragraphs
-                              return <p className="text-sm mb-4 font-mono whitespace-pre-wrap block break-words" {...props} />;
+                              // Don't render code blocks at all - return empty
+                              return null;
                             },
                             hr: ({node, ...props}: any) => <hr className="my-6 border-border block" {...props} />,
                             br: ({node, ...props}: any) => <br className="block" {...props} />,
@@ -620,7 +647,7 @@ export function AgentChat() {
             {/* Input Field */}
             <Input
               type="text"
-              placeholder="How can we help?"
+              placeholder="Ask anything about the repo"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
