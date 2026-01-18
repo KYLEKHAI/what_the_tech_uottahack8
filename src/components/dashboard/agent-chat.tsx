@@ -8,7 +8,7 @@ import remarkGfm from "remark-gfm";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Send, Github, Plus } from "lucide-react";
+import { Send, Github, Plus, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "@/lib/stores/dashboard-store";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -460,13 +460,23 @@ export function AgentChat() {
     const questionText = question || input.trim();
     if (!questionText || isLoadingAI) return;
 
+    // Check if user has any projects - if not, don't allow sending
+    if (projects.length === 0) {
+      return;
+    }
+
+    // For signed-in users, check if a project is selected
+    if (isSignedIn && !selectedProjectId) {
+      return;
+    }
+
     setInput("");
     setIsLoadingAI(true);
 
     if (isSignedIn) {
       // Database storage for signed-in users
+      // selectedProjectId is guaranteed to be non-null here due to earlier check
       if (!selectedProjectId) {
-        console.error('❌ No project selected for chat');
         setIsLoadingAI(false);
         return;
       }
@@ -525,15 +535,34 @@ export function AgentChat() {
     }
   };
 
+  const isLocked = projects.length === 0 || (isSignedIn && !selectedProjectId);
+
   return (
-    <div className="flex h-full flex-col bg-background">
+    <div className="relative flex h-full flex-col bg-background">
+      {/* Blur overlay when locked */}
+      {isLocked && (
+        <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/40 backdrop-blur-[2px] pointer-events-none">
+          <div className="flex flex-col items-center justify-center gap-4 rounded-lg border-2 border-foreground/30 bg-card/95 px-8 py-6 shadow-xl pointer-events-auto">
+            <div className="rounded-full bg-foreground/10 p-4">
+              <Lock className="h-8 w-8 text-foreground" />
+            </div>
+            <p className="text-lg font-semibold text-foreground">
+              Add repo before asking AI
+            </p>
+            <p className="text-sm text-muted-foreground text-center">
+              Please add a repository to start chatting with the AI agent
+            </p>
+          </div>
+        </div>
+      )}
+
       {/* Header */}
       <div className="flex h-14 items-center border-b border-border bg-card px-6">
         <h2 className="text-lg font-semibold text-foreground">Agent</h2>
       </div>
 
       {/* Messages Container */}
-      <div className="flex-1 overflow-y-auto p-4">
+      <div className={cn("flex-1 overflow-y-auto p-4", isLocked && "blur-[1px] pointer-events-none opacity-70")}>
         <div className="mx-auto w-full max-w-5xl h-full">
           {displayMessages.length === 0 ? (
             <div className="flex flex-col items-center justify-center space-y-6 h-full min-h-[400px]">
@@ -555,7 +584,8 @@ export function AgentChat() {
                       <button
                         key={index}
                         onClick={() => handleSend(question)}
-                        className="rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/50"
+                        disabled={isLocked}
+                        className="rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted/50 disabled:opacity-50 disabled:cursor-not-allowed"
                       >
                         {question}
                       </button>
@@ -642,8 +672,8 @@ export function AgentChat() {
       {/* Input Area */}
       <div className="border-t border-border bg-card p-4">
         <div className="mx-auto w-full max-w-5xl space-y-4">
-          {/* Input Field Row */}
-          <div className="flex items-center gap-3">
+          {/* Input Field Row - Blurred when locked */}
+          <div className={cn("flex items-center gap-3", isLocked && "pointer-events-none blur-[1px] opacity-70 pointer-events-none")}>
             {/* Input Field */}
             <Input
               type="text"
@@ -652,7 +682,7 @@ export function AgentChat() {
               onChange={(e) => setInput(e.target.value)}
               onKeyPress={handleKeyPress}
               className="flex-1 rounded-lg border-2 border-border focus-visible:border-ring"
-              disabled={isLoadingAI}
+              disabled={isLoadingAI || isLocked}
             />
 
             {/* Send Button */}
@@ -660,34 +690,36 @@ export function AgentChat() {
               onClick={() => handleSend()}
               size="icon"
               className="h-9 w-9 shrink-0 rounded-full"
-              disabled={isLoadingAI || !input.trim()}
+              disabled={isLoadingAI || !input.trim() || isLocked}
             >
               <Send className="h-4 w-4" />
             </Button>
           </div>
 
-          {/* Knowledge Base Indicator */}
-          {showAddRepo ? (
-            <button
-              onClick={handleAddRepoClick}
-              className="flex items-center gap-2 text-sm text-muted-foreground pt-1 px-3 py-1.5 rounded-lg border border-border hover:bg-accent hover:text-foreground transition-colors"
-            >
-              <Plus className="h-4 w-4" />
-              <span className="font-medium">{repoName}</span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
-              <Github className="h-4 w-4" />
-              <span className="font-medium">{repoName}</span>
-            </div>
-          )}
+          {/* Knowledge Base Indicator - Not blurred or locked */}
+          <div className={cn("relative z-[60]", showAddRepoModal && "z-[40]")}>
+            {showAddRepo ? (
+              <button
+                onClick={handleAddRepoClick}
+                className="flex items-center gap-2 text-sm text-green-700 dark:text-green-400 pt-1 px-3 py-1.5 rounded-lg border border-green-500/30 bg-green-500/10 hover:bg-green-500/20 hover:border-green-500/50 transition-colors"
+              >
+                <Plus className="h-4 w-4" />
+                <span className="font-medium">{repoName}</span>
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground pt-1">
+                <Github className="h-4 w-4" />
+                <span className="font-medium">{repoName}</span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 
       {/* Add Repo Confirmation Modal */}
       {showAddRepoModal && (
         <div
-          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm"
+          className="fixed inset-0 z-[70] flex items-center justify-center bg-black/50 backdrop-blur-sm"
           onClick={handleCancelAddRepo}
         >
           <Card
