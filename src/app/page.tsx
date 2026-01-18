@@ -11,7 +11,7 @@ import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCircle, Loader2, CheckCircle2, FileCode } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useDashboardStore, saveXMLToLocalStorage } from "@/lib/stores/dashboard-store";
+import { useDashboardStore, saveXMLToLocalStorage, saveDiagramToLocalStorage } from "@/lib/stores/dashboard-store";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getUserProfile, supabase } from "@/lib/supabase";
 
@@ -277,6 +277,13 @@ export default function Home() {
         if (!isSignedIn && data.data.xmlContent) {
           // Save XML to localStorage for non-signed-in users
           saveXMLToLocalStorage(projectId, data.data.xmlContent);
+        }
+
+        // Save diagrams (for non-signed-in users, store locally; for signed-in, already in database)
+        if (!isSignedIn && data.data.diagrams) {
+          // Save diagrams to localStorage for non-signed-in users
+          saveDiagramToLocalStorage(projectId, data.data.diagrams);
+          console.log("💾 Saved diagrams to localStorage for guest user:", projectId);
         }
 
         // Add project to store and select it (this also sets currentRepoUrl)

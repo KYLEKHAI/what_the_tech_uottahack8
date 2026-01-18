@@ -170,3 +170,635 @@
     animation: border-glow 4s ease-in-out infinite;
   }
 }
+
+/* Mermaid Diagram Styling - Light and Dark Mode Compatible */
+.mermaid {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Light mode diagram styling */
+:root {
+  --mermaid-user-color: hsl(207 89% 86%);
+  --mermaid-user-border: hsl(207 89% 42%);
+  --mermaid-auth-color: hsl(292 32% 86%);
+  --mermaid-auth-border: hsl(292 32% 42%);
+  --mermaid-main-color: hsl(120 60% 86%);
+  --mermaid-main-border: hsl(120 60% 30%);
+  --mermaid-error-color: hsl(0 70% 86%);
+  --mermaid-error-border: hsl(0 70% 45%);
+  --mermaid-process-color: hsl(39 100% 86%);
+  --mermaid-process-border: hsl(39 100% 40%);
+  --mermaid-input-color: hsl(39 100% 90%);
+  --mermaid-input-border: hsl(39 100% 50%);
+  --mermaid-storage-color: hsl(340 100% 86%);
+  --mermaid-storage-border: hsl(340 100% 37%);
+  --mermaid-output-color: hsl(207 89% 86%);
+  --mermaid-output-border: hsl(207 89% 42%);
+  --mermaid-validation-color: hsl(120 60% 86%);
+  --mermaid-validation-border: hsl(120 60% 30%);
+  --mermaid-overview-color: hsl(0 0% 96%);
+  --mermaid-overview-border: hsl(0 0% 40%);
+  --mermaid-text-color: hsl(222.2 84% 4.9%);
+  --mermaid-background: hsl(0 0% 100%);
+}
+
+/* Dark mode diagram styling */
+.dark {
+  --mermaid-user-color: hsl(207 89% 20%);
+  --mermaid-user-border: hsl(207 89% 60%);
+  --mermaid-auth-color: hsl(292 32% 20%);
+  --mermaid-auth-border: hsl(292 32% 60%);
+  --mermaid-main-color: hsl(120 60% 20%);
+  --mermaid-main-border: hsl(120 60% 50%);
+  --mermaid-error-color: hsl(0 70% 20%);
+  --mermaid-error-border: hsl(0 70% 60%);
+  --mermaid-process-color: hsl(39 100% 20%);
+  --mermaid-process-border: hsl(39 100% 60%);
+  --mermaid-input-color: hsl(39 100% 15%);
+  --mermaid-input-border: hsl(39 100% 65%);
+  --mermaid-storage-color: hsl(340 100% 20%);
+  --mermaid-storage-border: hsl(340 100% 60%);
+  --mermaid-output-color: hsl(207 89% 20%);
+  --mermaid-output-border: hsl(207 89% 60%);
+  --mermaid-validation-color: hsl(120 60% 20%);
+  --mermaid-validation-border: hsl(120 60% 50%);
+  --mermaid-overview-color: hsl(0 0% 15%);
+  --mermaid-overview-border: hsl(0 0% 60%);
+  --mermaid-text-color: hsl(210 40% 98%);
+  --mermaid-background: hsl(222.2 84% 4.9%);
+}
+
+/* Apply CSS custom properties to Mermaid diagrams */
+.mermaid .userClass,
+.mermaid .node.userClass {
+  fill: var(--mermaid-user-color) !important;
+  stroke: var(--mermaid-user-border) !important;
+  stroke-width: 2px !important;
+  color: var(--mermaid-text-color) !important;
+}
+
+.mermaid .authClass,
+.mermaid .node.authClass {
+  fill: var(--mermaid-auth-color) !important;
+  stroke: var(--mermaid-auth-border) !important;
+  stroke-width: 2px !important;
+  color: var(--mermaid-text-color) !important;
+}
+
+.mermaid .mainFlowClass,
+.mermaid .node.mainFlowClass {
+  fill: var(--mermaid-main-color) !important;
+  stroke: var(--mermaid-main-border) !important;
+  stroke-width: 2px !important;
+  color: var(--mermaid-text-color) !important;
+}
+
+.mermaid .errorClass,
+.mermaid .node.errorClass {
+  fill: var(--mermaid-error-color) !important;
+  stroke: var(--mermaid-error-border) !important;
+  stroke-width: 2px !important;
+  color: var(--mermaid-text-color) !important;
+}
+
+.mermaid .processClass,
+.mermaid .node.processClass {
+  fill: var(--mermaid-process-color) !important;
+  stroke: var(--mermaid-process-border) !important;
+  stroke-width: 2px !important;
+  color: var(--mermaid-text-color) !important;
+}
+
+.mermaid .inputClass,
+.mermaid .node.inputClass {
+  fill: var(--mermaid-input-color) !important;
+  stroke: var(--mermaid-input-border) !important;
+  stroke-width: 2px !important;
+  color: var(--mermaid-text-color) !important;
+}
+
+.mermaid .storageClass,
+.mermaid .node.storageClass {
+  fill: var(--mermaid-storage-color) !important;
+  stroke: var(--mermaid-storage-border) !important;
+  stroke-width: 2px !important;
+  color: var(--mermaid-text-color) !important;
+}
+
+.mermaid .outputClass,
+.mermaid .node.outputClass {
+  fill: var(--mermaid-output-color) !important;
+  stroke: var(--mermaid-output-border) !important;
+  stroke-width: 2px !important;
+  color: var(--mermaid-text-color) !important;
+}
+
+.mermaid .validationClass,
+.mermaid .node.validationClass {
+  fill: var(--mermaid-validation-color) !important;
+  stroke: var(--mermaid-validation-border) !important;
+  stroke-width: 2px !important;
+  color: var(--mermaid-text-color) !important;
+}
+
+.mermaid .overviewClass,
+.mermaid .node.overviewClass {
+  fill: var(--mermaid-overview-color) !important;
+  stroke: var(--mermaid-overview-border) !important;
+  stroke-width: 2px !important;
+  color: var(--mermaid-text-color) !important;
+}
+
+/* Enhanced text styling for diagrams */
+.mermaid text,
+.mermaid .nodeLabel,
+.mermaid .edgeLabel {
+  fill: var(--mermaid-text-color) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 500 !important;
+}
+
+/* Subgraph styling */
+.mermaid .cluster rect {
+  fill: var(--mermaid-background) !important;
+  stroke: var(--mermaid-overview-border) !important;
+  stroke-width: 1px !important;
+  opacity: 0.1 !important;
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+.mermaid .cluster text {
+  fill: var(--mermaid-text-color) !important;
+  font-weight: 600 !important;
+  font-size: 14px !important;
+}
+
+/* Edge/arrow styling */
+.mermaid .edgePath path {
+  stroke: var(--mermaid-text-color) !important;
+  stroke-width: 1.5px !important;
+  opacity: 0.7 !important;
+}
+
+.mermaid .arrowheadPath {
+  fill: var(--mermaid-text-color) !important;
+  opacity: 0.7 !important;
+}
+
+/* Smooth transitions for theme changes */
+.mermaid * {
+  transition: fill 0.3s ease, stroke 0.3s ease, opacity 0.3s ease !important;
+}
+
+/* Enhanced diagram container styling */
+.diagram-container {
+  position: relative;
+  overflow: hidden;
+  border-radius: 8px;
+  transition: box-shadow 0.2s ease-in-out;
+}
+
+.diagram-container:hover {
+  box-shadow: 0 4px 12px -2px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
+}
+
+/* Fade-in animation for diagrams */
+.diagram-container .mermaid {
+  animation: fadeInDiagram 0.6s ease-out;
+}
+
+@keyframes fadeInDiagram {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Improved diagram node styling */
+.mermaid .node rect,
+.mermaid .node circle,
+.mermaid .node ellipse,
+.mermaid .node polygon {
+  filter: drop-shadow(0 1px 3px rgba(0, 0, 0, 0.1)) !important;
+  transition: filter 0.2s ease !important;
+}
+
+/* Enhanced text styling for better readability */
+.mermaid .nodeLabel {
+  font-weight: 500 !important;
+  font-size: 12px !important;
+  letter-spacing: 0.01em !important;
+}
+
+/* Professional color overrides */
+.mermaid .node .userClass rect,
+.mermaid .node .userClass circle {
+  fill: #3b82f6 !important;
+  stroke: #1d4ed8 !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .node .authClass rect,
+.mermaid .node .authClass circle {
+  fill: #8b5cf6 !important;
+  stroke: #7c3aed !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .node .mainFlowClass rect,
+.mermaid .node .mainFlowClass circle {
+  fill: #10b981 !important;
+  stroke: #059669 !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .node .processClass rect,
+.mermaid .node .processClass circle {
+  fill: #10b981 !important;
+  stroke: #059669 !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .node .dataClass rect,
+.mermaid .node .dataClass circle {
+  fill: #6b7280 !important;
+  stroke: #4b5563 !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .node .storageClass rect,
+.mermaid .node .storageClass circle {
+  fill: #8b5cf6 !important;
+  stroke: #7c3aed !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .node .inputClass rect,
+.mermaid .node .inputClass circle {
+  fill: #3b82f6 !important;
+  stroke: #1d4ed8 !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .node .outputClass rect,
+.mermaid .node .outputClass circle {
+  fill: #f59e0b !important;
+  stroke: #d97706 !important;
+  stroke-width: 2px !important;
+}
+
+/* Zoom and pan functionality */
+.diagram-zoom {
+  cursor: zoom-in;
+  position: relative;
+  overflow: hidden;
+}
+
+.diagram-zoom.zoomed {
+  cursor: grab;
+  overflow: auto;
+}
+
+.diagram-zoom.zoomed:active {
+  cursor: grabbing;
+}
+
+/* Smooth transitions for SVG transforms */
+.diagram-zoom svg {
+  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: transform;
+}
+
+/* Ensure zoomed SVGs have proper scrollable area */
+.diagram-zoom.zoomed svg {
+  min-width: 200%;
+  min-height: 200%;
+  display: block;
+}
+
+/* Custom scrollbar for zoomed diagrams */
+.diagram-zoom.zoomed {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(156, 163, 175, 0.5) transparent;
+}
+
+.diagram-zoom.zoomed::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.diagram-zoom.zoomed::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.05);
+  border-radius: 4px;
+}
+
+.diagram-zoom.zoomed::-webkit-scrollbar-thumb {
+  background-color: rgba(156, 163, 175, 0.5);
+  border-radius: 4px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+
+.diagram-zoom.zoomed::-webkit-scrollbar-thumb:hover {
+  background-color: rgba(156, 163, 175, 0.7);
+}
+
+/* Theme-responsive Mermaid diagram styles */
+:root {
+  /* Light theme - exact brand colors from rules.md */
+  --diagram-bg: #f9f9f8;        /* Your background color */
+  --diagram-surface: #ffffff;    /* Your card/input color */
+  --diagram-primary: #040404;    /* Your primary text color */
+  --diagram-secondary: #5e5a56;  /* Your muted text/border color */
+  
+  /* Professional accent colors that complement your neutral palette */
+  --diagram-accent-primary: #2563eb;   /* Professional blue */
+  --diagram-accent-success: #059669;   /* Success green */
+  --diagram-accent-warning: #d97706;   /* Warning orange */
+  --diagram-accent-info: #7c3aed;      /* Info purple */
+  --diagram-accent-neutral: #6b7280;   /* Neutral gray */
+}
+
+.dark {
+  /* Dark theme - complementary colors maintaining your aesthetic */
+  --diagram-bg: #1f2937;         /* Dark background */
+  --diagram-surface: #374151;    /* Dark surface */
+  --diagram-primary: #f9fafb;    /* Light text on dark */
+  --diagram-secondary: #ffffff;  /* White arrows and borders in dark mode */
+  
+  /* Brighter accents for dark mode visibility */
+  --diagram-accent-primary: #60a5fa;   /* Lighter blue */
+  --diagram-accent-success: #34d399;   /* Lighter green */  
+  --diagram-accent-warning: #fbbf24;   /* Lighter orange */
+  --diagram-accent-info: #a78bfa;      /* Lighter purple */
+  --diagram-accent-neutral: #9ca3af;   /* Lighter gray */
+}
+
+/* Base Mermaid styling */
+.mermaid {
+  background-color: transparent !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+/* Rounded edges for all diagram nodes */
+.mermaid .node rect,
+.mermaid rect {
+  rx: 8px !important;
+  ry: 8px !important;
+}
+
+/* Additional rounded styling for different node shapes */
+.mermaid .nodeLabel rect,
+.mermaid .cluster rect {
+  rx: 6px !important;
+  ry: 6px !important;
+}
+
+/* Theme-responsive node classes */
+/* Support both hyphenated and camelCase class names */
+/* Target the actual rect/shape elements within the classed groups */
+.mermaid .primaryNode rect,
+.mermaid .primaryNode circle,
+.mermaid .primaryNode polygon,
+.mermaid .primary-node rect,
+.mermaid .primary-node circle,
+.mermaid .primary-node polygon {
+  fill: var(--diagram-surface) !important;
+  stroke: var(--diagram-secondary) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .secondaryNode rect,
+.mermaid .secondaryNode circle,
+.mermaid .secondaryNode polygon,
+.mermaid .secondary-node rect,
+.mermaid .secondary-node circle,
+.mermaid .secondary-node polygon {
+  fill: var(--diagram-bg) !important;
+  stroke: var(--diagram-secondary) !important;
+  stroke-width: 1.5px !important;
+}
+
+.mermaid .userNode rect,
+.mermaid .userNode circle,
+.mermaid .userNode polygon,
+.mermaid .user-node rect,
+.mermaid .user-node circle,
+.mermaid .user-node polygon {
+  fill: var(--diagram-accent-primary) !important;
+  stroke: var(--diagram-accent-primary) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .dataNode rect,
+.mermaid .dataNode circle,
+.mermaid .dataNode polygon,
+.mermaid .data-node rect,
+.mermaid .data-node circle,
+.mermaid .data-node polygon {
+  fill: var(--diagram-accent-neutral) !important;
+  stroke: var(--diagram-accent-neutral) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .decisionNode rect,
+.mermaid .decisionNode polygon,
+.mermaid .decisionNode circle,
+.mermaid .decision-node rect,
+.mermaid .decision-node polygon,
+.mermaid .decision-node circle {
+  fill: var(--diagram-accent-info) !important;
+  stroke: var(--diagram-accent-info) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .inputNode rect,
+.mermaid .inputNode circle,
+.mermaid .inputNode polygon,
+.mermaid .input-node rect,
+.mermaid .input-node circle,
+.mermaid .input-node polygon {
+  fill: var(--diagram-accent-primary) !important;
+  stroke: var(--diagram-accent-primary) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .processNode rect,
+.mermaid .processNode circle,
+.mermaid .processNode polygon,
+.mermaid .process-node rect,
+.mermaid .process-node circle,
+.mermaid .process-node polygon {
+  fill: var(--diagram-accent-success) !important;
+  stroke: var(--diagram-accent-success) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .storageNode rect,
+.mermaid .storageNode circle,
+.mermaid .storageNode polygon,
+.mermaid .storage-node rect,
+.mermaid .storage-node circle,
+.mermaid .storage-node polygon {
+  fill: var(--diagram-accent-info) !important;
+  stroke: var(--diagram-accent-info) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .outputNode rect,
+.mermaid .outputNode circle,
+.mermaid .outputNode polygon,
+.mermaid .output-node rect,
+.mermaid .output-node circle,
+.mermaid .output-node polygon {
+  fill: var(--diagram-accent-warning) !important;
+  stroke: var(--diagram-accent-warning) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .validationNode rect,
+.mermaid .validationNode circle,
+.mermaid .validationNode polygon,
+.mermaid .validation-node rect,
+.mermaid .validation-node circle,
+.mermaid .validation-node polygon {
+  fill: var(--diagram-accent-neutral) !important;
+  stroke: var(--diagram-accent-neutral) !important;
+  stroke-width: 2px !important;
+}
+
+/* Text styling */
+.mermaid .node text,
+.mermaid .node .label,
+.mermaid text {
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 500 !important;
+  font-size: 14px !important;
+}
+
+/* Default text color for primary/secondary nodes */
+.mermaid .primaryNode text,
+.mermaid .primaryNode .label,
+.mermaid .secondaryNode text,
+.mermaid .secondaryNode .label,
+.mermaid .primary-node text,
+.mermaid .primary-node .label,
+.mermaid .secondary-node text,
+.mermaid .secondary-node .label {
+  fill: var(--diagram-primary) !important;
+}
+
+/* Accent node text (overrides for colored backgrounds) */
+.mermaid .userNode text,
+.mermaid .userNode .label,
+.mermaid .user-node text,
+.mermaid .user-node .label,
+.mermaid .dataNode text,
+.mermaid .dataNode .label,
+.mermaid .data-node text,
+.mermaid .data-node .label,
+.mermaid .decisionNode text,
+.mermaid .decisionNode .label,
+.mermaid .decision-node text,
+.mermaid .decision-node .label,
+.mermaid .inputNode text,
+.mermaid .inputNode .label,
+.mermaid .input-node text,
+.mermaid .input-node .label,
+.mermaid .processNode text,
+.mermaid .processNode .label,
+.mermaid .process-node text,
+.mermaid .process-node .label,
+.mermaid .storageNode text,
+.mermaid .storageNode .label,
+.mermaid .storage-node text,
+.mermaid .storage-node .label,
+.mermaid .outputNode text,
+.mermaid .outputNode .label,
+.mermaid .output-node text,
+.mermaid .output-node .label,
+.mermaid .validationNode text,
+.mermaid .validationNode .label,
+.mermaid .validation-node text,
+.mermaid .validation-node .label {
+  fill: var(--diagram-surface) !important;
+  font-weight: 600 !important;
+}
+
+/* Edge styling */
+.mermaid .edgePath .path {
+  stroke: var(--diagram-secondary) !important;
+  stroke-width: 2px !important;
+}
+
+.mermaid .marker {
+  fill: var(--diagram-secondary) !important;
+  stroke: var(--diagram-secondary) !important;
+}
+
+/* More specific arrow/marker selectors */
+.mermaid .arrowheadPath,
+.mermaid .arrowhead,
+.mermaid marker path,
+.mermaid defs marker path {
+  fill: var(--diagram-secondary) !important;
+  stroke: var(--diagram-secondary) !important;
+}
+
+/* All edge paths and lines */
+.mermaid path,
+.mermaid line {
+  stroke: var(--diagram-secondary) !important;
+}
+
+/* Flowchart specific arrows */
+.mermaid .flowchart-link {
+  stroke: var(--diagram-secondary) !important;
+  fill: none !important;
+}
+
+.mermaid .edgePath path {
+  stroke: var(--diagram-secondary) !important;
+  stroke-width: 2px !important;
+}
+
+/* Edge labels */
+.mermaid .edgeLabel {
+  background-color: var(--diagram-surface) !important;
+  color: var(--diagram-primary) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-size: 12px !important;
+  border-radius: 4px !important;
+  padding: 2px 6px !important;
+  border: 1px solid var(--diagram-secondary) !important;
+}
+
+/* Subgraph styling */
+.mermaid .cluster rect {
+  fill: transparent !important;
+  stroke: var(--diagram-secondary) !important;
+  stroke-width: 1px !important;
+  stroke-dasharray: 5,5 !important;
+  opacity: 0.7 !important;
+}
+
+.mermaid .cluster .label {
+  color: var(--diagram-primary) !important;
+  font-family: 'Inter', sans-serif !important;
+  font-weight: 600 !important;
+  font-size: 16px !important;
+}
+
+/* Smooth transitions for theme changes */
+.mermaid * {
+  transition: fill 0.3s ease, stroke 0.3s ease, color 0.3s ease !important;
+}

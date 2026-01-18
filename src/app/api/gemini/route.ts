@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { generateGeminiResponse, checkRateLimit } from '@/lib/gemini';
+import { generateClaudeResponse, checkRateLimit } from '@/lib/claude';
 
 export async function POST(request: NextRequest) {
   console.log('🔥 POST /api/gemini called');
@@ -65,7 +65,7 @@ export async function POST(request: NextRequest) {
     }
     
     // Generate response using Gemini
-    const response = await generateGeminiResponse(
+    const response = await generateClaudeResponse(
       message,
       projectXML,
       chatHistory || []

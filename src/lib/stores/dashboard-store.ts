@@ -22,6 +22,7 @@ export interface ChatMessage {
 // localStorage helper functions
 const STORAGE_KEY = "what-the-tech-projects";
 const XML_STORAGE_PREFIX = "what-the-tech-xml-";
+const DIAGRAM_STORAGE_PREFIX = "what-the-tech-diagram-";
 
 export function saveProjectsToLocalStorage(projects: ProjectItem[]): void {
   try {
@@ -87,6 +88,33 @@ export function deleteXMLFromLocalStorage(projectId: string): void {
     localStorage.removeItem(`${XML_STORAGE_PREFIX}${projectId}`);
   } catch (error) {
     console.error("Failed to delete XML from localStorage:", error);
+  }
+}
+
+// Diagram localStorage functions
+export function saveDiagramToLocalStorage(projectId: string, diagrams: { businessFlow: string; dataFlow: string; combined: string }): void {
+  try {
+    localStorage.setItem(`${DIAGRAM_STORAGE_PREFIX}${projectId}`, JSON.stringify(diagrams));
+  } catch (error) {
+    console.error("Failed to save diagrams to localStorage:", error);
+  }
+}
+
+export function loadDiagramFromLocalStorage(projectId: string): { businessFlow: string; dataFlow: string; combined: string } | null {
+  try {
+    const stored = localStorage.getItem(`${DIAGRAM_STORAGE_PREFIX}${projectId}`);
+    return stored ? JSON.parse(stored) : null;
+  } catch (error) {
+    console.error("Failed to load diagrams from localStorage:", error);
+    return null;
+  }
+}
+
+export function deleteDiagramFromLocalStorage(projectId: string): void {
+  try {
+    localStorage.removeItem(`${DIAGRAM_STORAGE_PREFIX}${projectId}`);
+  } catch (error) {
+    console.error("Failed to delete diagrams from localStorage:", error);
   }
 }
 

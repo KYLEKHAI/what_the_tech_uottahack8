@@ -1,5 +1,6 @@
 import { parseGitHubUrl, cloneRepository, cleanupTempDir, type RepoInfo } from "./repo-fetcher";
 import { runRepomix, getRepoMetadata, type RepomixOptions } from "./repomix-runner";
+import { generateProjectDiagrams } from "../diagram-generator";
 
 export interface IngestionResult {
   repoInfo: RepoInfo;
@@ -10,6 +11,11 @@ export interface IngestionResult {
     commitMessage?: string;
   };
   artifactSize: number;
+  diagrams: {
+    businessFlow: string;
+    dataFlow: string;
+    combined: string;
+  };
 }
 
 /**
@@ -37,7 +43,11 @@ export async function ingestRepository(
       outputFormat: "xml",
     });
 
-    // 5. Calculate artifact size
+    // 5. Generate comprehensive project diagrams
+    console.log("🎯 Generating project diagrams...");
+    const diagrams = await generateProjectDiagrams(xmlContent, repoInfo);
+
+    // 6. Calculate artifact size
     const artifactSize = Buffer.byteLength(xmlContent, "utf-8");
 
     return {
@@ -48,6 +58,7 @@ export async function ingestRepository(
       xmlContent,
       metadata,
       artifactSize,
+      diagrams,
     };
   } catch (error) {
     throw new Error(

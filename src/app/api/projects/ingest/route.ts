@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { createServerClient, type CookieOptions } from "@supabase/ssr";
 import { ingestRepository } from "@/services/ingestion";
+import { saveDiagramsComplete } from "@/services/diagram-storage";
 
 /**
  * POST /api/projects/ingest
@@ -292,6 +293,15 @@ export async function POST(request: NextRequest) {
             console.warn("No XML content available, cannot save XML");
           }
         }
+
+        // Save generated diagrams to database and storage
+        if (projectId && result.diagrams) {
+          try {
+            await saveDiagramsComplete(supabase, projectId, result.diagrams);
+          } catch (diagramSaveError) {
+            console.error("Exception saving diagrams:", diagramSaveError);
+          }
+        }
       } catch (error) {
         console.error("Exception creating/finding project:", error);
       }
@@ -334,6 +344,8 @@ export async function POST(request: NextRequest) {
         xmlContent: (!user || !xmlSaved) ? result.xmlContent : undefined,
         xmlPreview: result.xmlContent.substring(0, 1000), // First 1000 chars as preview
         xmlSaved, // Indicate if XML was successfully saved to storage (for debugging)
+        // Include generated diagrams
+        diagrams: result.diagrams,
       },
     });
   } catch (error) {
