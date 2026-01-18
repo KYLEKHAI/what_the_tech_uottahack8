@@ -2,7 +2,7 @@
  * Claude API integration via OpenRouter
  */
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY || "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";
+const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
 const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
 
 if (!OPENROUTER_API_KEY) {
