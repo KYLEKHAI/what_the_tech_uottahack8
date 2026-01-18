@@ -2,24 +2,7 @@
 
 Convert GitHub repositories into explorable knowledge hubs with AI-powered chat and visual architecture diagrams.
 
-## Getting Started
-
-After cloning the repository, follow these steps:
-
-### 1. Install Dependencies
-
-```bash
-npm install
-```
-
-### 2. Run the Development Server
-
-```bash
-npm run dev
-
-```
-
-(set .env variables TBD)
+Check out the live site here: [what-the-tech.netlify.app](https://what-the-tech.netlify.app/)
 
 ## Tech Stack
 
