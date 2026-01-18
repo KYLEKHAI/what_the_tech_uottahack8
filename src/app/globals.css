@@ -63,7 +63,7 @@
   --muted-foreground: #1a1a1a; /* Muted text/borders - darker for better readability */
   --accent: #f9f9f8;
   --accent-foreground: #040404;
-  --destructive: oklch(0.577 0.245 27.325);
+  --destructive: oklch(0.65 0.2 25);
   --border: #5e5a56; /* Muted borders */
   --input: #ffffff; /* Input backgrounds */
   --ring: #5e5a56;
