@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { useState } from "react";
 import { useRouter } from "next/navigation";
@@ -158,8 +159,48 @@ export default function SignIn() {
     }
   }
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background px-4 py-12">
-      <Card className="w-full max-w-md">
+    <div className="min-h-screen w-full bg-background">
+      {/* Header/Nav */}
+      <header className="sticky top-0 z-50 w-full bg-background/80 backdrop-blur-[2px] border-b border-border/40">
+        <nav className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
+          {/* Left: Logo image + Logo title */}
+          <Link
+            href="/"
+            className="flex items-center gap-2 hover:opacity-80 transition-opacity"
+          >
+            <Image
+              src="/what-the-stack-logo.png"
+              alt="what-the-tech logo"
+              width={48}
+              height={48}
+              className="h-12 w-12"
+            />
+            <span className="text-lg font-semibold text-foreground">
+              what-the-tech
+            </span>
+          </Link>
+
+          {/* Right: About link + Features link */}
+          <div className="flex items-center gap-6">
+            <Link
+              href="/#about"
+              className="text-sm text-foreground transition-colors hover:text-muted-foreground"
+            >
+              About
+            </Link>
+            <Link
+              href="/#features"
+              className="text-sm text-foreground transition-colors hover:text-muted-foreground"
+            >
+              Features
+            </Link>
+          </div>
+        </nav>
+      </header>
+
+      {/* Main Content */}
+      <div className="flex min-h-[calc(100vh-4rem)] items-center justify-center bg-background px-4 py-12">
+        <Card className="w-full max-w-md">
         <CardHeader className="space-y-1">
           <CardTitle className="text-2xl font-bold text-center">
             Sign in to account
@@ -329,6 +370,7 @@ export default function SignIn() {
           </div>
         </CardContent>
       </Card>
+      </div>
     </div>
   );
 }
