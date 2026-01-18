@@ -652,23 +652,68 @@ export default function Home() {
 
       {/* Footer */}
       <footer className="mt-24 border-t border-border bg-card">
-        <div className="container mx-auto flex min-h-32 items-start justify-start px-4 py-12 sm:px-6 lg:px-8">
+        <div className="container mx-auto flex min-h-32 items-center justify-between px-4 py-12 sm:px-6 lg:px-8">
           <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
               <Image
                 src="/what-the-stack-logo.png"
                 alt="what-the-tech logo"
-                width={48}
-                height={48}
-                className="h-12 w-12"
+                width={64}
+                height={64}
+                className="h-16 w-16"
               />
               <span className="text-lg font-semibold text-foreground">
                 what-the-tech
               </span>
             </div>
-            <span className="text-sm text-muted-foreground">
+            <span className="text-base font-medium text-muted-foreground">
               © 2026
             </span>
+          </div>
+
+          {/* Acknowledgements - Bottom Right */}
+          <div className="flex flex-col items-end gap-8 text-right">
+            <div className="flex flex-col items-end gap-3">
+              <Image
+                src="/uottahack8.png"
+                alt="uOttaHack 8"
+                width={120}
+                height={120}
+                className="h-auto w-24 opacity-90"
+              />
+              <p className="text-sm text-foreground">
+                <span className="text-muted-foreground">Built For </span>
+                <span className="font-semibold">uOttaHack 8</span>
+              </p>
+            </div>
+
+            <div className="flex flex-col items-end gap-3">
+              <Image
+                src="/Google_Gemini_logo.png"
+                alt="Google Gemini AI"
+                width={150}
+                height={150}
+                className="h-auto w-20 opacity-90"
+              />
+              <p className="text-sm text-foreground">
+                <span className="text-muted-foreground">Powered By </span>
+                <span className="font-semibold">Google Gemini AI</span>
+              </p>
+            </div>
+
+            <div className="flex flex-col items-end gap-3">
+              <Image
+                src="/mlh-logo.png"
+                alt="Major League Hacking"
+                width={150}
+                height={150}
+                className="h-auto w-20 opacity-90"
+              />
+              <p className="text-sm text-foreground">
+                <span className="text-muted-foreground">Supported By </span>
+                <span className="font-semibold">Major League Hacking (MLH)</span>
+              </p>
+            </div>
           </div>
         </div>
       </footer>
