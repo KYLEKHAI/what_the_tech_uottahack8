@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
+import { Button } from "@/components/ui/button";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getUserProfile } from "@/lib/supabase";
 import { useEffect, useState } from "react";

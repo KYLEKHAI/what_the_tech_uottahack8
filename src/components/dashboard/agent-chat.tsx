@@ -1,12 +1,14 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card } from "@/components/ui/card";
 import { Send, Github } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore } from "@/lib/stores/dashboard-store";
+import { useAuth } from "@/components/providers/auth-provider";
 
 interface Message {
   id: string;
@@ -23,6 +25,7 @@ const presetQuestions = [
 ];
 
 export function AgentChat() {
+  const { user } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState("");
   const currentRepoUrl = useDashboardStore((state) => state.currentRepoUrl);

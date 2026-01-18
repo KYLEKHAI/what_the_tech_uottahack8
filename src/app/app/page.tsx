@@ -12,11 +12,8 @@ export default function DashboardPage() {
   const { user, loading } = useAuth();
   const router = useRouter();
 
-  useEffect(() => {
-    if (!loading && !user) {
-      router.push('/signin');
-    }
-  }, [user, loading, router]);
+  // Don't redirect unauthenticated users anymore
+  // Let them access the dashboard with limited functionality
 
   if (loading) {
     return (
@@ -26,9 +23,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (!user) {
-    return null; // Will redirect to signin
-  }
+  // Remove the auth guard - allow everyone to access dashboard
   return (
     <div className="flex h-screen flex-col overflow-hidden bg-background">
       {/* Top Header */}

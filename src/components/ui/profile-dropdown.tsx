@@ -8,7 +8,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { FolderOpen, Settings, LogOut } from "lucide-react";
+import { FolderOpen, Settings, LogOut, UserPlus, LogIn } from "lucide-react";
 import { useAuth } from "@/components/providers/auth-provider";
 import { useRouter } from "next/navigation";
 import { handleSignOut as signOutUtil } from "@/lib/auth-utils";
@@ -22,7 +22,7 @@ interface ProfileDropdownProps {
 }
 
 export function ProfileDropdown({ userProfile }: ProfileDropdownProps) {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const router = useRouter();
 
   const handleSignOut = async () => {
@@ -37,8 +37,17 @@ export function ProfileDropdown({ userProfile }: ProfileDropdownProps) {
     router.push('/app/settings');
   };
 
+  const handleSignIn = () => {
+    router.push('/signin');
+  };
+
+  const handleSignUp = () => {
+    router.push('/signup');
+  };
+
   // Create initials from user's first and last name
   const getInitials = () => {
+    if (!user) return "G"; // Guest user
     if (!userProfile?.first_name && !userProfile?.last_name) return "U";
     const first = userProfile?.first_name?.[0] || "";
     const last = userProfile?.last_name?.[0] || "";
@@ -46,6 +55,7 @@ export function ProfileDropdown({ userProfile }: ProfileDropdownProps) {
   };
 
   const getDisplayName = () => {
+    if (!user) return "Guest User";
     if (!userProfile?.first_name && !userProfile?.last_name) return "User";
     return `${userProfile?.first_name || ""} ${userProfile?.last_name || ""}`.trim();
   };
@@ -66,19 +76,37 @@ export function ProfileDropdown({ userProfile }: ProfileDropdownProps) {
           <p className="text-sm font-medium">{getDisplayName()}</p>
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleMyProjects} className="cursor-pointer">
-          <FolderOpen className="mr-2 h-4 w-4" />
-          <span>My Projects</span>
-        </DropdownMenuItem>
-        <DropdownMenuItem onClick={handleAccountSettings} className="cursor-pointer">
-          <Settings className="mr-2 h-4 w-4" />
-          <span>Account Settings</span>
-        </DropdownMenuItem>
-        <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600 focus:text-red-600">
-          <LogOut className="mr-2 h-4 w-4" />
-          <span>Sign out</span>
-        </DropdownMenuItem>
+        
+        {user ? (
+          // Authenticated user menu
+          <>
+            <DropdownMenuItem onClick={handleMyProjects} className="cursor-pointer">
+              <FolderOpen className="mr-2 h-4 w-4" />
+              <span>My Projects</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleAccountSettings} className="cursor-pointer">
+              <Settings className="mr-2 h-4 w-4" />
+              <span>Account Settings</span>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={handleSignOut} className="cursor-pointer text-red-600 focus:text-red-600">
+              <LogOut className="mr-2 h-4 w-4" />
+              <span>Sign out</span>
+            </DropdownMenuItem>
+          </>
+        ) : (
+          // Non-authenticated user menu
+          <>
+            <DropdownMenuItem onClick={handleSignIn} className="cursor-pointer">
+              <LogIn className="mr-2 h-4 w-4" />
+              <span>Sign In</span>
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={handleSignUp} className="cursor-pointer text-blue-600 focus:text-blue-600">
+              <UserPlus className="mr-2 h-4 w-4" />
+              <span>Sign Up</span>
+            </DropdownMenuItem>
+          </>
+        )}
       </DropdownMenuContent>
     </DropdownMenu>
   );
