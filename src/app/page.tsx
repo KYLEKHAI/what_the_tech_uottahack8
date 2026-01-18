@@ -393,7 +393,7 @@ export default function Home() {
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className="h-10 w-10 rounded-full bg-white dark:bg-white p-1 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full dark:bg-white p-1 flex items-center justify-center">
               <Image
                 src="/what-the-stack-logo.png"
                 alt="what-the-tech logo"
@@ -443,7 +443,7 @@ export default function Home() {
       <section className="container mx-auto flex flex-col items-center justify-start px-4 pt-0 pb-8 sm:px-6 sm:pt-0 sm:pb-12 lg:px-8">
         <div className="flex w-full max-w-2xl flex-col items-center gap-8 text-center">
           {/* Logo image */}
-          <div className="h-24 w-24 sm:h-32 sm:w-32 lg:h-40 lg:w-40 rounded-full bg-white dark:bg-white p-2 sm:p-2.5 lg:p-3 flex items-center justify-center">
+          <div className="h-24 w-24 sm:h-32 sm:w-32 lg:h-40 lg:w-40 rounded-full dark:bg-white p-2 sm:p-2.5 lg:p-3 flex items-center justify-center">
             <Image
               src="/what-the-stack-logo.png"
               alt="what-the-tech logo"
@@ -793,7 +793,7 @@ export default function Home() {
         <div className="container mx-auto flex min-h-20 items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
           {/* Left: Logo + Text + Copyright */}
           <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-full bg-white dark:bg-white p-1 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full dark:bg-white p-1 flex items-center justify-center">
               <Image
                 src="/what-the-stack-logo.png"
                 alt="what-the-tech logo"

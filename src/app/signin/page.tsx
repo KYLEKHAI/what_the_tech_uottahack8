@@ -169,7 +169,7 @@ export default function SignIn() {
             href="/"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <div className="h-10 w-10 rounded-full bg-white dark:bg-white p-1 flex items-center justify-center">
+            <div className="h-10 w-10 rounded-full dark:bg-white p-1 flex items-center justify-center">
               <Image
                 src="/what-the-stack-logo.png"
                 alt="what-the-tech logo"
