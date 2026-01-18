@@ -28,7 +28,7 @@ Check out the live site here: [what-the-tech.netlify.app](https://what-the-tech.
 - **Storage**: Supabase Storage
 
 ### AI & ML
-- **AI Models**: Google Gemini AI (via @google/generative-ai)
+- **AI Models**: Google Gemini AI (via @google/generative-ai) and Claude 4 (via openrouter)
 - **Code Analysis**: Repomix (repository ingestion)
 
 ### Visualization & Content
