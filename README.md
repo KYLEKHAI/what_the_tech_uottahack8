@@ -2,6 +2,8 @@
 
 Convert GitHub repositories into explorable knowledge hubs with AI-powered chat and visual architecture diagrams.
 
+## Live Demo
+
 Check out the live site here: [what-the-tech.netlify.app](https://what-the-tech.netlify.app/)
 
 ## Tech Stack
