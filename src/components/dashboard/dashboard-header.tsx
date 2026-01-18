@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useAuth } from "@/components/providers/auth-provider";
@@ -86,8 +87,11 @@ export function DashboardHeader() {
           </span>
         </a>
 
-        {/* Right: User Profile Menu */}
-        <ProfileDropdown userProfile={userProfile} />
+        {/* Right: Theme + User Profile Menu */}
+        <div className="flex items-center gap-3">
+          <ThemeToggle />
+          <ProfileDropdown userProfile={userProfile} />
+        </div>
       </header>
 
       {/* Clear Project Modal - For non-signed-in users navigating away */}

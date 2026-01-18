@@ -190,6 +190,7 @@ export async function getUserProfile(userId: string) {
 export async function updateUserProfile(userId: string, profileData: {
   first_name?: string;
   last_name?: string;
+  theme_preference?: 'light' | 'dark' | 'system';
 }) {
   try {
     const { data, error } = await supabase
@@ -206,6 +207,28 @@ export async function updateUserProfile(userId: string, profileData: {
     return { data, error: null };
   } catch (error) {
     return { data: null, error: 'Failed to update profile' };
+  }
+}
+
+export async function updateUserThemePreference(userId: string, theme: 'light' | 'dark' | 'system') {
+  try {
+    const { data, error } = await supabase
+      .from('profiles')
+      .update({ 
+        theme_preference: theme,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', userId)
+      .select()
+      .single();
+
+    if (error) {
+      return { data: null, error: error.message };
+    }
+
+    return { data, error: null };
+  } catch (error) {
+    return { data: null, error: 'Failed to update theme preference' };
   }
 }
 

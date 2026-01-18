@@ -12,6 +12,7 @@ export interface Profile {
   first_name?: string
   last_name?: string
   email?: string
+  theme_preference?: 'light' | 'dark' | 'system'
   created_at: string
   updated_at: string
 }

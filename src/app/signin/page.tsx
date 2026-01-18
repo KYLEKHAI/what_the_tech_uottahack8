@@ -7,6 +7,7 @@ import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Github, Loader2, AlertCircle, Eye, EyeOff } from "lucide-react";
 import { authHelpers } from "@/lib/supabase";
 
@@ -180,8 +181,8 @@ export default function SignIn() {
             </span>
           </Link>
 
-          {/* Right: About link + Features link */}
-          <div className="flex items-center gap-6">
+          {/* Right: About link + Features link + Theme */}
+          <div className="flex items-center gap-4">
             <Link
               href="/#about"
               className="text-sm text-foreground transition-colors hover:text-muted-foreground"
@@ -194,6 +195,7 @@ export default function SignIn() {
             >
               Features
             </Link>
+            <ThemeToggle />
           </div>
         </nav>
       </header>

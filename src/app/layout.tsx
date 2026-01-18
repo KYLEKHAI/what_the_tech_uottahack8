@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import { QueryProvider } from "@/components/providers/query-provider";
 import { AuthProvider } from "@/components/providers/auth-provider";
+import { ThemeProvider } from "@/components/providers/theme-provider";
 import "./globals.css";
 
 const inter = Inter({
@@ -27,14 +28,14 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className="scroll-smooth">
+    <html lang="en" className="scroll-smooth" suppressHydrationWarning>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} font-sans antialiased`}
       >
         <AuthProvider>
-          <QueryProvider>
-            {children}
-          </QueryProvider>
+          <ThemeProvider attribute="class" defaultTheme="light" enableSystem>
+            <QueryProvider>{children}</QueryProvider>
+          </ThemeProvider>
         </AuthProvider>
       </body>
     </html>

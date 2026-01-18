@@ -183,7 +183,7 @@ export async function POST(request: NextRequest) {
               repo_owner: result.repoInfo.owner,
               repo_name: result.repoInfo.name,
               status: "ready",
-              default_branch: result.metadata.defaultBranch || "main",
+              default_branch: result.repoInfo.defaultBranch || result.metadata.branch || "main",
             })
             .select()
             .single();

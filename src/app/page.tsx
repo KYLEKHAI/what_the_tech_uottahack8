@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCircle, Loader2, CheckCircle2, FileCode } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useDashboardStore, saveXMLToLocalStorage } from "@/lib/stores/dashboard-store";
@@ -372,8 +373,8 @@ export default function Home() {
             </span>
           </button>
 
-          {/* Right: About link + Features link + Auth section */}
-          <div className="flex items-center gap-6">
+          {/* Right: About link + Features link + Theme toggle + Auth section */}
+          <div className="flex items-center gap-4">
             <a
               href="#about"
               className="text-sm text-foreground transition-colors hover:text-muted-foreground"
@@ -386,6 +387,7 @@ export default function Home() {
             >
               Features
             </a>
+            <ThemeToggle />
             {loading ? (
               <div className="w-8 h-8 flex items-center justify-center">
                 <Loader2 className="h-4 w-4 animate-spin" />
