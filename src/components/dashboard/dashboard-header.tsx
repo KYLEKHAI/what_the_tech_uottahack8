@@ -75,13 +75,15 @@ export function DashboardHeader() {
           onClick={(e) => handleNavigation(e, "/")}
           className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
         >
-          <Image
-            src="/what-the-stack-logo.png"
-            alt="what-the-tech logo"
-            width={32}
-            height={32}
-            className="h-8 w-8"
-          />
+          <div className="h-7 w-7 rounded-full bg-white dark:bg-white p-0.5 flex items-center justify-center">
+            <Image
+              src="/what-the-stack-logo.png"
+              alt="what-the-tech logo"
+              width={28}
+              height={28}
+              className="h-full w-full object-contain"
+            />
+          </div>
           <span className="text-sm font-semibold text-foreground">
             what-the-tech
           </span>

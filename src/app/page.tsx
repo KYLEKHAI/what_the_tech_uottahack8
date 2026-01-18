@@ -368,13 +368,15 @@ export default function Home() {
             onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <Image
-              src="/what-the-stack-logo.png"
-              alt="what-the-tech logo"
-              width={48}
-              height={48}
-              className="h-12 w-12"
-            />
+            <div className="h-10 w-10 rounded-full bg-white dark:bg-white p-1 flex items-center justify-center">
+              <Image
+                src="/what-the-stack-logo.png"
+                alt="what-the-tech logo"
+                width={40}
+                height={40}
+                className="h-full w-full object-contain"
+              />
+            </div>
             <span className="text-lg font-semibold text-foreground">
               what-the-tech
             </span>
@@ -416,13 +418,15 @@ export default function Home() {
       <section className="container mx-auto flex flex-col items-center justify-start px-4 pt-0 pb-8 sm:px-6 sm:pt-0 sm:pb-12 lg:px-8">
         <div className="flex w-full max-w-2xl flex-col items-center gap-8 text-center">
           {/* Logo image */}
-          <Image
-            src="/what-the-stack-logo.png"
-            alt="what-the-tech logo"
-            width={112}
-            height={112}
-            className="h-28 w-28 sm:h-36 sm:w-36 lg:h-44 lg:w-44"
-          />
+          <div className="h-24 w-24 sm:h-32 sm:w-32 lg:h-40 lg:w-40 rounded-full bg-white dark:bg-white p-2 sm:p-2.5 lg:p-3 flex items-center justify-center">
+            <Image
+              src="/what-the-stack-logo.png"
+              alt="what-the-tech logo"
+              width={96}
+              height={96}
+              className="h-full w-full object-contain"
+            />
+          </div>
           {/* Logo title */}
           <h1 className="text-5xl font-bold tracking-tight text-foreground sm:text-6xl lg:text-7xl">
             what-the-tech
@@ -736,10 +740,10 @@ export default function Home() {
             {/* Content Box - Selected Feature Details */}
             <Card className="flex h-full flex-col">
               <CardHeader>
-                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary/10">
+                <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-lg bg-primary text-primary-foreground">
                   {(() => {
                     const Icon = selectedFeature.icon;
-                    return <Icon className="h-6 w-6 text-primary" />;
+                    return <Icon className="h-6 w-6" />;
                   })()}
                 </div>
                 <CardTitle className="text-2xl">{selectedFeature.title}</CardTitle>
@@ -760,22 +764,25 @@ export default function Home() {
       {/* Footer */}
       <footer className="mt-24 border-t border-border bg-card">
         <div className="container mx-auto flex min-h-20 items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
-          <div className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-2">
+          {/* Left: Logo + Text + Copyright */}
+          <div className="flex items-center gap-2">
+            <div className="h-10 w-10 rounded-full bg-white dark:bg-white p-1 flex items-center justify-center">
               <Image
                 src="/what-the-stack-logo.png"
                 alt="what-the-tech logo"
-                width={48}
-                height={48}
-                className="h-12 w-12"
+                width={40}
+                height={40}
+                className="h-full w-full object-contain"
               />
+            </div>
+            <div className="flex flex-col">
               <span className="text-base font-semibold text-foreground">
                 what-the-tech
               </span>
+              <span className="text-sm text-foreground">
+                © 2026
+              </span>
             </div>
-            <span className="text-sm text-muted-foreground">
-              © 2026
-            </span>
           </div>
 
           {/* Acknowledgements - Bottom Right */}
@@ -789,8 +796,8 @@ export default function Home() {
                 className="h-auto w-20 opacity-90"
               />
               <p className="text-xs text-foreground">
-                <span className="text-muted-foreground">Built For </span>
-                <span className="font-semibold">uOttaHack 8</span>
+                <span className="text-foreground">Built For </span>
+                <span className="font-semibold text-foreground">uOttaHack 8</span>
               </p>
             </div>
 
@@ -803,8 +810,8 @@ export default function Home() {
                 className="h-auto w-16 opacity-90"
               />
               <p className="text-xs text-foreground">
-                <span className="text-muted-foreground">Powered By </span>
-                <span className="font-semibold">Google Gemini AI</span>
+                <span className="text-foreground">Powered By </span>
+                <span className="font-semibold text-foreground">Google Gemini AI</span>
               </p>
             </div>
 
@@ -817,8 +824,8 @@ export default function Home() {
                 className="h-auto w-16 opacity-90"
               />
               <p className="text-xs text-foreground">
-                <span className="text-muted-foreground">Supported By </span>
-                <span className="font-semibold">Major League Hacking (MLH)</span>
+                <span className="text-foreground">Supported By </span>
+                <span className="font-semibold text-foreground">Major League Hacking (MLH)</span>
               </p>
             </div>
           </div>

@@ -63,7 +63,7 @@
   --muted-foreground: #1a1a1a; /* Muted text/borders - darker for better readability */
   --accent: #f9f9f8;
   --accent-foreground: #040404;
-  --destructive: oklch(0.65 0.2 25);
+  --destructive: oklch(0.75 0.18 25);
   --border: #5e5a56; /* Muted borders */
   --input: #ffffff; /* Input backgrounds */
   --ring: #5e5a56;
@@ -83,33 +83,33 @@
 }
 
 .dark {
-  /* Inverted palette for dark mode */
-  --background: #040404;
-  --foreground: #f9f9f8;
-  --card: #1a1a1a;
-  --card-foreground: #f9f9f8;
-  --popover: #1a1a1a;
-  --popover-foreground: #f9f9f8;
-  --primary: #f9f9f8;
-  --primary-foreground: #040404;
-  --secondary: #1a1a1a;
-  --secondary-foreground: #f9f9f8;
-  --muted: #1a1a1a;
-  --muted-foreground: #a1a1a0;
-  --accent: #1a1a1a;
-  --accent-foreground: #f9f9f8;
-  --destructive: oklch(0.65 0.2 25);
-  --border: #3a3a36;
-  --input: #1a1a1a;
-  --ring: #3a3a36;
+  /* Warm, cohesive dark theme palette */
+  --background: #0f0f0f; /* Soft black - warmer than pure black */
+  --foreground: #f5f5f5; /* Soft white - easier on eyes */
+  --card: #1a1a1a; /* Slightly lighter than background for depth */
+  --card-foreground: #f5f5f5;
+  --popover: #1f1f1f; /* Subtle elevation */
+  --popover-foreground: #f5f5f5;
+  --primary: #f5f5f5; /* Light text for dark mode */
+  --primary-foreground: #0f0f0f;
+  --secondary: #252525; /* Warmer grey for secondary elements */
+  --secondary-foreground: #f5f5f5;
+  --muted: #2a2a2a; /* Muted backgrounds - warmer tone */
+  --muted-foreground: #a8a8a8; /* Softer muted text */
+  --accent: #2a2a2a;
+  --accent-foreground: #f5f5f5;
+  --destructive: oklch(0.75 0.18 25);
+  --border: #2f2f2f; /* Softer borders - better contrast */
+  --input: #1a1a1a; /* Input backgrounds */
+  --ring: #404040; /* Focus rings - more visible */
   --sidebar: #1a1a1a;
-  --sidebar-foreground: #f9f9f8;
-  --sidebar-primary: #f9f9f8;
-  --sidebar-primary-foreground: #040404;
-  --sidebar-accent: #1a1a1a;
-  --sidebar-accent-foreground: #f9f9f8;
-  --sidebar-border: #3a3a36;
-  --sidebar-ring: #3a3a36;
+  --sidebar-foreground: #f5f5f5;
+  --sidebar-primary: #f5f5f5;
+  --sidebar-primary-foreground: #0f0f0f;
+  --sidebar-accent: #252525;
+  --sidebar-accent-foreground: #f5f5f5;
+  --sidebar-border: #2f2f2f;
+  --sidebar-ring: #404040;
 }
 
 @layer base {

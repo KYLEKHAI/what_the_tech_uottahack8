@@ -369,7 +369,7 @@ export default function SettingsPage() {
                       ) : (
                         <div className="space-y-4">
                           {errors.general && (
-                            <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                            <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md border border-destructive/20">
                               {errors.general}
                             </div>
                           )}
@@ -383,11 +383,11 @@ export default function SettingsPage() {
                                   value={profileData.firstName}
                                   onChange={(e) => handleProfileChange("firstName", e.target.value)}
                                   placeholder="First name"
-                                  className={cn("w-full", errors.firstName && "border-red-500")}
+                                  className={cn("w-full", errors.firstName && "border-destructive")}
                                   error={!!errors.firstName}
                                 />
                                 {errors.firstName && (
-                                  <p className="text-sm text-red-600 mt-1">{errors.firstName}</p>
+                                  <p className="text-sm text-destructive mt-1">{errors.firstName}</p>
                                 )}
                               </div>
                               <div className="flex-1">
@@ -396,11 +396,11 @@ export default function SettingsPage() {
                                   value={profileData.lastName}
                                   onChange={(e) => handleProfileChange("lastName", e.target.value)}
                                   placeholder="Last name"
-                                  className={cn("w-full", errors.lastName && "border-red-500")}
+                                  className={cn("w-full", errors.lastName && "border-destructive")}
                                   error={!!errors.lastName}
                                 />
                                 {errors.lastName && (
-                                  <p className="text-sm text-red-600 mt-1">{errors.lastName}</p>
+                                  <p className="text-sm text-destructive mt-1">{errors.lastName}</p>
                                 )}
                               </div>
                             </div>
@@ -468,7 +468,7 @@ export default function SettingsPage() {
                   ) : (
                     <div className="space-y-4">
                       {errors.general && (
-                        <div className="text-sm text-red-600 bg-red-50 p-3 rounded-md">
+                        <div className="text-sm text-destructive bg-destructive/10 p-3 rounded-md border border-destructive/20">
                           {errors.general}
                         </div>
                       )}
@@ -485,7 +485,7 @@ export default function SettingsPage() {
                               onChange={(e) => handlePasswordChange("currentPassword", e.target.value)}
                               onKeyPress={handleKeyPress}
                               placeholder="Enter current password"
-                              className={cn("pr-10", errors.currentPassword && "border-red-500")}
+                              className={cn("pr-10", errors.currentPassword && "border-destructive")}
                               error={!!errors.currentPassword}
                               disabled={isCurrentPasswordVerified}
                             />
@@ -511,7 +511,7 @@ export default function SettingsPage() {
                           )}
                         </div>
                         {errors.currentPassword && (
-                          <p className="text-sm text-red-600">{errors.currentPassword}</p>
+                          <p className="text-sm text-destructive">{errors.currentPassword}</p>
                         )}
                       </div>
 
@@ -526,7 +526,7 @@ export default function SettingsPage() {
                                 value={passwordData.newPassword}
                                 onChange={(e) => handlePasswordChange("newPassword", e.target.value)}
                                 placeholder="Enter new password"
-                                className={cn("pr-10", errors.newPassword && "border-red-500")}
+                                className={cn("pr-10", errors.newPassword && "border-destructive")}
                                 error={!!errors.newPassword}
                               />
                               <button
@@ -542,7 +542,7 @@ export default function SettingsPage() {
                               </button>
                             </div>
                             {errors.newPassword && (
-                              <p className="text-sm text-red-600">{errors.newPassword}</p>
+                              <p className="text-sm text-destructive">{errors.newPassword}</p>
                             )}
                           </div>
 
@@ -555,11 +555,11 @@ export default function SettingsPage() {
                               value={passwordData.confirmPassword}
                               onChange={(e) => handlePasswordChange("confirmPassword", e.target.value)}
                               placeholder="Confirm new password"
-                              className={cn("", errors.confirmPassword && "border-red-500")}
+                              className={cn("", errors.confirmPassword && "border-destructive")}
                               error={!!errors.confirmPassword}
                             />
                             {errors.confirmPassword && (
-                              <p className="text-sm text-red-600">{errors.confirmPassword}</p>
+                              <p className="text-sm text-destructive">{errors.confirmPassword}</p>
                             )}
                           </div>
                         </>
@@ -602,7 +602,7 @@ export default function SettingsPage() {
                   <Button
                     variant="outline"
                     onClick={handleSignOut}
-                    className="w-full sm:w-auto text-black border-black hover:bg-black hover:text-white"
+                    className="w-full sm:w-auto border-foreground/20 hover:bg-foreground hover:text-background dark:border-foreground/20 dark:hover:bg-foreground dark:hover:text-background"
                   >
                     <LogOut className="mr-2 h-4 w-4" />
                     Sign Out
@@ -611,9 +611,9 @@ export default function SettingsPage() {
               </Card>
 
               {/* Delete Account Section */}
-              <Card id="deleteaccount" className="border-red-600">
+              <Card id="deleteaccount" className="border-destructive/50">
                 <CardHeader>
-                  <CardTitle className="text-red-600">Delete Account</CardTitle>
+                  <CardTitle className="text-destructive">Delete Account</CardTitle>
                   <CardDescription>Permanently delete your account and all associated data. This action cannot be undone.</CardDescription>
                 </CardHeader>
                 <CardContent>

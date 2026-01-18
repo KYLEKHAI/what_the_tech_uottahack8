@@ -169,13 +169,15 @@ export default function SignIn() {
             href="/"
             className="flex items-center gap-2 hover:opacity-80 transition-opacity"
           >
-            <Image
-              src="/what-the-stack-logo.png"
-              alt="what-the-tech logo"
-              width={48}
-              height={48}
-              className="h-12 w-12"
-            />
+            <div className="h-10 w-10 rounded-full bg-white dark:bg-white p-1 flex items-center justify-center">
+              <Image
+                src="/what-the-stack-logo.png"
+                alt="what-the-tech logo"
+                width={40}
+                height={40}
+                className="h-full w-full object-contain"
+              />
+            </div>
             <span className="text-lg font-semibold text-foreground">
               what-the-tech
             </span>
@@ -211,7 +213,7 @@ export default function SignIn() {
         <CardContent className="space-y-4">
           {/* General Error Display */}
           {errors.general && (
-            <div className="flex items-center gap-2 p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-md">
+            <div className="flex items-center gap-2 p-3 text-sm text-destructive bg-destructive/10 border border-destructive/20 rounded-md">
               <AlertCircle className="h-4 w-4" />
               {errors.general}
             </div>
@@ -234,7 +236,7 @@ export default function SignIn() {
                 error={!!errors.email}
               />
               {errors.email && (
-                <div className="flex items-center gap-1 text-sm text-red-600">
+                <div className="flex items-center gap-1 text-sm text-destructive">
                   <AlertCircle className="h-3 w-3" />
                   {errors.email}
                 </div>
@@ -272,7 +274,7 @@ export default function SignIn() {
                 </button>
               </div>
               {errors.password && (
-                <div className="flex items-center gap-1 text-sm text-red-600">
+                <div className="flex items-center gap-1 text-sm text-destructive">
                   <AlertCircle className="h-3 w-3" />
                   {errors.password}
                 </div>
