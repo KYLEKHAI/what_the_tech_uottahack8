@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getUserProjects, deleteProject as deleteProjectFromDB } from "@/lib/supabase";
+import { getUserProjects, deleteProject as deleteProjectFromDB, getProjectXML } from "@/lib/supabase";
 
 export interface ProjectItem {
   id: string;
@@ -9,14 +9,18 @@ export interface ProjectItem {
   owner: string;
   repo: string;
   status: "ready" | "ingesting" | "failed";
+  xmlContent?: string; // XML content for non-signed-in users (stored locally)
 }
 
 // localStorage helper functions
 const STORAGE_KEY = "what-the-tech-projects";
+const XML_STORAGE_PREFIX = "what-the-tech-xml-";
 
 export function saveProjectsToLocalStorage(projects: ProjectItem[]): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+    // Save projects without XML content (XML is stored separately)
+    const projectsWithoutXML = projects.map(({ xmlContent, ...rest }) => rest);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(projectsWithoutXML));
   } catch (error) {
     console.error("Failed to save projects to localStorage:", error);
   }
@@ -26,7 +30,15 @@ export function loadProjectsFromLocalStorage(): ProjectItem[] | null {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
     if (!stored) return null;
-    return JSON.parse(stored) as ProjectItem[];
+    const projects = JSON.parse(stored) as ProjectItem[];
+    
+    // Load XML content for each project
+    const projectsWithXML = projects.map((project) => {
+      const xmlContent = loadXMLFromLocalStorage(project.id);
+      return { ...project, xmlContent };
+    });
+    
+    return projectsWithXML;
   } catch (error) {
     console.error("Failed to load projects from localStorage:", error);
     return null;
@@ -39,8 +51,35 @@ export function deleteProjectFromLocalStorage(projectId: string): void {
     if (!projects) return;
     const filtered = projects.filter((p) => p.id !== projectId);
     saveProjectsToLocalStorage(filtered);
+    // Also delete XML
+    deleteXMLFromLocalStorage(projectId);
   } catch (error) {
     console.error("Failed to delete project from localStorage:", error);
+  }
+}
+
+export function saveXMLToLocalStorage(projectId: string, xmlContent: string): void {
+  try {
+    localStorage.setItem(`${XML_STORAGE_PREFIX}${projectId}`, xmlContent);
+  } catch (error) {
+    console.error("Failed to save XML to localStorage:", error);
+  }
+}
+
+export function loadXMLFromLocalStorage(projectId: string): string | undefined {
+  try {
+    return localStorage.getItem(`${XML_STORAGE_PREFIX}${projectId}`) || undefined;
+  } catch (error) {
+    console.error("Failed to load XML from localStorage:", error);
+    return undefined;
+  }
+}
+
+export function deleteXMLFromLocalStorage(projectId: string): void {
+  try {
+    localStorage.removeItem(`${XML_STORAGE_PREFIX}${projectId}`);
+  } catch (error) {
+    console.error("Failed to delete XML from localStorage:", error);
   }
 }
 
@@ -75,6 +114,11 @@ interface DashboardStore {
   // Current repository
   currentRepoUrl: string | null;
   setCurrentRepoUrl: (url: string | null) => void;
+
+  // Current XML content (for agent/board context)
+  currentXMLContent: string | null;
+  setCurrentXMLContent: (xml: string | null) => void;
+  loadProjectXML: (projectId: string, isSignedIn: boolean) => Promise<void>;
 }
 
 export const useDashboardStore = create<DashboardStore>((set, get) => ({
@@ -108,6 +152,15 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
       // If not signed in, save to localStorage
       if (!isSignedIn) {
         saveProjectsToLocalStorage(newProjects);
+      }
+      
+      // Load XML content for the newly added project
+      if (project.xmlContent) {
+        // For non-signed-in users, XML is already in project.xmlContent
+        set({ currentXMLContent: project.xmlContent });
+      } else if (isSignedIn && project.dbId) {
+        // For signed-in users, load from database
+        get().loadProjectXML(project.dbId, true);
       }
       
       return {
@@ -178,6 +231,16 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   setSelectedProject: (projectId) => {
     const state = get();
     const project = projectId ? state.getProjectById(projectId) : null;
+    
+    if (project) {
+      // Load XML content when project is selected
+      const isSignedIn = project.dbId !== undefined;
+      const projectIdToLoad = isSignedIn ? project.dbId! : project.id;
+      state.loadProjectXML(projectIdToLoad, isSignedIn);
+    } else {
+      set({ currentXMLContent: null });
+    }
+    
     set({
       selectedProjectId: projectId,
       currentRepoUrl: project
@@ -195,6 +258,53 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
   // Current repository
   currentRepoUrl: null,
   setCurrentRepoUrl: (url) => set({ currentRepoUrl: url }),
+
+  // Current XML content
+  currentXMLContent: null,
+  setCurrentXMLContent: (xml) => set({ currentXMLContent: xml }),
+  
+  // Load XML content for a project
+  loadProjectXML: async (projectId, isSignedIn) => {
+    try {
+      if (isSignedIn) {
+        // Load from database (Supabase Storage)
+        const xmlContent = await getProjectXML(projectId);
+        
+        // If XML not found in storage, check localStorage as fallback
+        if (!xmlContent) {
+          console.log("XML not found in storage, checking localStorage as fallback...");
+          const localXML = loadXMLFromLocalStorage(projectId);
+          if (localXML) {
+            console.log("Found XML in localStorage as fallback");
+            set({ currentXMLContent: localXML });
+          } else {
+            console.warn("XML not found in storage or localStorage for project:", projectId);
+            set({ currentXMLContent: null });
+          }
+        } else {
+          set({ currentXMLContent: xmlContent });
+        }
+      } else {
+        // Load from localStorage
+        const xmlContent = loadXMLFromLocalStorage(projectId);
+        set({ currentXMLContent: xmlContent || null });
+      }
+    } catch (error) {
+      console.error("Error loading project XML:", error);
+      // Try localStorage as fallback even on error
+      if (isSignedIn) {
+        const localXML = loadXMLFromLocalStorage(projectId);
+        if (localXML) {
+          console.log("Error loading from storage, using localStorage fallback");
+          set({ currentXMLContent: localXML });
+        } else {
+          set({ currentXMLContent: null });
+        }
+      } else {
+        set({ currentXMLContent: null });
+      }
+    }
+  },
 
   // Load projects from persistence layer
   loadProjects: async (isSignedIn, userId) => {
@@ -225,26 +335,41 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
           status: dbProject.status as "ready" | "ingesting" | "failed",
         }));
         
-        set({
-          projects,
-          isLoadingProjects: false,
-          // Auto-select first project if available
-          selectedProjectId: projects.length > 0 ? projects[0].id : null,
-          currentRepoUrl: projects.length > 0 
-            ? `https://github.com/${projects[0].owner}/${projects[0].repo}`
-            : null,
-        });
+          const firstProject = projects.length > 0 ? projects[0] : null;
+          
+          // Load XML for first project if available
+          if (firstProject) {
+            const isSignedIn = firstProject.dbId !== undefined;
+            const projectIdToLoad = isSignedIn ? firstProject.dbId! : firstProject.id;
+            get().loadProjectXML(projectIdToLoad, isSignedIn);
+          }
+          
+          set({
+            projects,
+            isLoadingProjects: false,
+            // Auto-select first project if available
+            selectedProjectId: firstProject?.id || null,
+            currentRepoUrl: firstProject
+              ? `https://github.com/${firstProject.owner}/${firstProject.repo}`
+              : null,
+          });
       } else {
         // Load from localStorage
         const projects = loadProjectsFromLocalStorage();
         
         if (projects && projects.length > 0) {
+          const firstProject = projects[0];
+          
+          // Load XML for first project
+          const xmlContent = loadXMLFromLocalStorage(firstProject.id);
+          
           set({
             projects,
             isLoadingProjects: false,
             // Auto-select first project if available
-            selectedProjectId: projects[0].id,
-            currentRepoUrl: `https://github.com/${projects[0].owner}/${projects[0].repo}`,
+            selectedProjectId: firstProject.id,
+            currentRepoUrl: `https://github.com/${firstProject.owner}/${firstProject.repo}`,
+            currentXMLContent: xmlContent || null,
           });
         } else {
           set({ isLoadingProjects: false });
