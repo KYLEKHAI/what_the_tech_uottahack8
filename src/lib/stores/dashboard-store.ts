@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { getUserProjects, deleteProject as deleteProjectFromDB } from "@/lib/supabase";
+import { getUserProjects, deleteProject as deleteProjectFromDB, supabase } from "@/lib/supabase";
 
 export interface ProjectItem {
   id: string;
@@ -9,6 +9,13 @@ export interface ProjectItem {
   owner: string;
   repo: string;
   status: "ready" | "ingesting" | "failed";
+}
+
+export interface ChatMessage {
+  id: string;
+  content: string;
+  role: 'user' | 'assistant' | 'system';
+  created_at: string;
 }
 
 // localStorage helper functions
@@ -75,6 +82,12 @@ interface DashboardStore {
   // Current repository
   currentRepoUrl: string | null;
   setCurrentRepoUrl: (url: string | null) => void;
+
+  // Chat messages
+  chatMessages: ChatMessage[];
+  isLoadingMessages: boolean;
+  loadChatMessages: (projectId: string) => Promise<void>;
+  addChatMessage: (projectId: string, content: string, role: 'user' | 'assistant' | 'system') => Promise<void>;
 }
 
 export const useDashboardStore = create<DashboardStore>((set, get) => ({
@@ -255,4 +268,96 @@ export const useDashboardStore = create<DashboardStore>((set, get) => ({
       set({ isLoadingProjects: false });
     }
   },
+
+  // Chat messages
+  chatMessages: [],
+  isLoadingMessages: false,
+  
+  loadChatMessages: async (projectId: string) => {
+    console.log('🔄 Loading chat messages for project:', projectId);
+    set({ isLoadingMessages: true });
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        console.error('❌ No access token available for chat API');
+        set({ isLoadingMessages: false });
+        return;
+      }
+
+      const response = await fetch(`/api/chat?projectId=${projectId}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        }
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ Failed to load chat messages:', response.status, errorData);
+        set({ isLoadingMessages: false });
+        return;
+      }
+
+      const result = await response.json();
+      console.log('✅ Loaded chat messages:', result.messages?.length || 0);
+      
+      set({
+        chatMessages: result.messages || [],
+        isLoadingMessages: false
+      });
+    } catch (error) {
+      console.error('❌ Error loading chat messages:', error);
+      set({ isLoadingMessages: false });
+    }
+  },
+
+  addChatMessage: async (projectId: string, content: string, role: 'user' | 'assistant' | 'system') => {
+    console.log('💬 Adding chat message to project:', projectId, 'Role:', role);
+    
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session?.access_token) {
+        console.error('❌ No access token available for chat API');
+        return;
+      }
+
+      const response = await fetch('/api/chat', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          projectId,
+          message: content,
+          role
+        })
+      });
+
+      if (!response.ok) {
+        const errorData = await response.text();
+        console.error('❌ Failed to add chat message:', response.status, errorData);
+        return;
+      }
+
+      const result = await response.json();
+      console.log('✅ Added chat message:', result.message?.id);
+      
+      // Add the message to local state
+      set((state) => ({
+        chatMessages: [...state.chatMessages, {
+          id: result.message.id,
+          content: content,
+          role: role,
+          created_at: result.message.created_at
+        }]
+      }));
+    } catch (error) {
+      console.error('❌ Error adding chat message:', error);
+    }
+  }
 }));

@@ -33,10 +33,30 @@ export const authHelpers = {
 
   // Sign in with email and password
   signInWithEmail: async (email: string, password: string) => {
+    console.log('🔑 Attempting sign in with email:', email);
+    
     const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     })
+    
+    if (error) {
+      console.error('❌ Sign in failed:', error.message);
+      return { data, error };
+    }
+
+    if (data.session?.access_token && data.user) {
+      console.log('🎉 EMAIL SIGN IN SUCCESS!', {
+        email: data.user.email,
+        userId: data.user.id,
+        provider: 'email',
+        tokenReceived: true,
+        tokenLength: data.session.access_token.length,
+        sessionExpiresAt: new Date(data.session.expires_at! * 1000).toLocaleString(),
+        userRole: data.user.role || 'authenticated'
+      });
+    }
+
     return { data, error }
   },
 
@@ -54,24 +74,98 @@ export const authHelpers = {
 
   // Sign in with Google
   signInWithGoogle: async () => {
+    console.log('🔑 Attempting sign in with Google...');
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`
       }
     })
+    
+    if (error) {
+      console.error('❌ Google sign in failed:', error.message);
+    } else {
+      console.log('🚀 Google OAuth redirect initiated - user will be redirected to complete sign in');
+    }
+    
     return { data, error }
   },
 
   // Sign in with GitHub
   signInWithGitHub: async () => {
+    console.log('🔑 Attempting sign in with GitHub...');
+    
     const { data, error } = await supabase.auth.signInWithOAuth({
       provider: 'github',
       options: {
         redirectTo: `${window.location.origin}/auth/callback`
       }
     })
+    
+    if (error) {
+      console.error('❌ GitHub sign in failed:', error.message);
+    } else {
+      console.log('🚀 GitHub OAuth redirect initiated - user will be redirected to complete sign in');
+    }
+    
     return { data, error }
+  }
+}
+
+// Token validation utility
+export async function validateCurrentToken() {
+  console.log('🔍 Validating current authentication token...');
+  
+  try {
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('❌ Session error:', sessionError);
+      return { valid: false, error: sessionError };
+    }
+
+    if (!session?.access_token) {
+      console.log('❌ No access token found');
+      return { valid: false, error: new Error('No access token') };
+    }
+
+    // Test the token by getting user
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.error('❌ Token validation failed:', userError);
+      return { valid: false, error: userError };
+    }
+
+    if (!user) {
+      console.log('❌ Token exists but user validation failed');
+      return { valid: false, error: new Error('Invalid user') };
+    }
+
+    const expiresAt = new Date(session.expires_at! * 1000);
+    const timeUntilExpiry = Math.round((session.expires_at! * 1000 - Date.now()) / (1000 * 60));
+    
+    console.log('✅ TOKEN IS VALID AND FRESH!', {
+      userEmail: user.email,
+      userId: user.id,
+      tokenLength: session.access_token.length,
+      expiresAt: expiresAt.toLocaleString(),
+      minutesUntilExpiry: timeUntilExpiry,
+      isExpiringSoon: timeUntilExpiry < 60,
+      lastSignIn: user.last_sign_in_at
+    });
+
+    return { 
+      valid: true, 
+      session, 
+      user, 
+      expiresAt, 
+      minutesUntilExpiry: timeUntilExpiry 
+    };
+  } catch (error) {
+    console.error('❌ Error during token validation:', error);
+    return { valid: false, error };
   }
 }
 
@@ -250,5 +344,66 @@ export async function deleteUserAccount(userId: string) {
     return { success: true, error: null };
   } catch (error) {
     return { success: false, error: 'Failed to delete account' };
+  }
+}
+
+// Chat helper functions - Each project IS a chat
+export async function addMessage(projectId: string, content: string, role: 'user' | 'assistant' | 'system' = 'user') {
+  try {
+    console.log('💬 Adding message to project:', projectId, 'Role:', role);
+    
+    const { data, error } = await supabase
+      .from('messages')
+      .insert({
+        project_id: projectId,
+        content: content,
+        role: role
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('❌ Error adding message:', error);
+      return { data: null, error: error.message };
+    }
+
+    console.log('✅ Message added successfully:', data.id);
+    return { data, error: null };
+  } catch (error) {
+    console.error('❌ Unexpected error adding message:', error);
+    return { data: null, error: 'Failed to add message' };
+  }
+}
+
+export async function getChatMessages(projectId: string, userId: string) {
+  try {
+    console.log('📋 Fetching chat messages for project:', projectId);
+    
+    const { data, error } = await supabase
+      .from('messages')
+      .select(`
+        id,
+        content,
+        role,
+        created_at,
+        projects!inner (
+          id,
+          user_id
+        )
+      `)
+      .eq('project_id', projectId)
+      .eq('projects.user_id', userId)
+      .order('created_at', { ascending: true });
+
+    if (error) {
+      console.error('❌ Error fetching messages:', error);
+      return { data: null, error: error.message };
+    }
+
+    console.log('✅ Fetched', data?.length || 0, 'messages');
+    return { data: data || [], error: null };
+  } catch (error) {
+    console.error('❌ Unexpected error fetching messages:', error);
+    return { data: null, error: 'Failed to fetch messages' };
   }
 }
