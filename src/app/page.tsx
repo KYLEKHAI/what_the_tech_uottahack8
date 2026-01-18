@@ -2,12 +2,14 @@
 
 import Image from "next/image";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code } from "lucide-react";
+import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCircle, Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useDashboardStore } from "@/lib/stores/dashboard-store";
 
 const features = [
   {
@@ -42,6 +44,156 @@ const features = [
 
 export default function Home() {
   const [selectedFeature, setSelectedFeature] = useState(features[0]);
+  const [repoUrl, setRepoUrl] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [isErrorVisible, setIsErrorVisible] = useState(false);
+  const router = useRouter();
+  const setCurrentRepoUrl = useDashboardStore((state) => state.setCurrentRepoUrl);
+
+  const validateGitHubUrl = (url: string): boolean => {
+    try {
+      const urlObj = new URL(url);
+      // Check if it's a GitHub URL
+      if (urlObj.hostname !== "github.com" && urlObj.hostname !== "www.github.com") {
+        return false;
+      }
+      // Check if it has owner/repo format
+      const pathParts = urlObj.pathname.split("/").filter(Boolean);
+      if (pathParts.length < 2) {
+        return false;
+      }
+      return true;
+    } catch {
+      // Try parsing as owner/repo format
+      const parts = url.trim().split("/").filter(Boolean);
+      if (parts.length >= 2 && !parts[0].includes(".") && !parts[1].includes(".")) {
+        return true;
+      }
+      return false;
+    }
+  };
+
+  const normalizeRepoUrl = (url: string): string => {
+    const trimmed = url.trim();
+    // If it's already a full URL, return it
+    if (trimmed.startsWith("http://") || trimmed.startsWith("https://")) {
+      return trimmed;
+    }
+    // If it's owner/repo format, convert to full URL
+    const parts = trimmed.split("/").filter(Boolean);
+    if (parts.length >= 2) {
+      return `https://github.com/${parts[0]}/${parts[1]}`;
+    }
+    return trimmed;
+  };
+
+  const downloadXML = (xmlContent: string, repoName: string) => {
+    const blob = new Blob([xmlContent], { type: "application/xml" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${repoName}-repomix.xml`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const handleAnalyze = async () => {
+    setError(null);
+    
+    // Validate URL
+    if (!repoUrl.trim()) {
+      setError("Please enter a GitHub repository URL");
+      return;
+    }
+
+    const normalizedUrl = normalizeRepoUrl(repoUrl);
+    
+    if (!validateGitHubUrl(normalizedUrl)) {
+      setError("Please enter a valid GitHub repository URL");
+      return;
+    }
+
+    setIsLoading(true);
+
+    try {
+      const response = await fetch("/api/projects/ingest", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ repoUrl: normalizedUrl }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || data.error || "Failed to process repository");
+      }
+
+      if (data.success && data.data) {
+        const repoName = `${data.data.repoInfo.owner}-${data.data.repoInfo.name}`;
+        
+        // Download XML file
+        if (data.data.xmlContent) {
+          downloadXML(data.data.xmlContent, repoName);
+        }
+
+        // Store repo URL in dashboard store
+        setCurrentRepoUrl(normalizedUrl);
+
+        // Redirect to dashboard
+        router.push("/app");
+      } else {
+        throw new Error("Unexpected response format");
+      }
+    } catch (err) {
+      console.error("Ingestion error:", err);
+      let errorMessage = "Failed to process repository. Please try again.";
+      
+      if (err instanceof Error) {
+        const errMsg = err.message.toLowerCase();
+        if (errMsg.includes("private") || errMsg.includes("authentication") || errMsg.includes("permission")) {
+          errorMessage = "This repository appears to be private. Only public repositories are supported.";
+        } else if (errMsg.includes("not found") || errMsg.includes("404")) {
+          errorMessage = "Repository not found. Please check the URL and ensure the repository exists.";
+        } else if (errMsg.includes("clone") || errMsg.includes("git")) {
+          errorMessage = "Failed to access repository. Please ensure it's a public GitHub repository.";
+        } else {
+          errorMessage = err.message;
+        }
+      }
+      
+      setError(errorMessage);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleKeyPress = (e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter" && !isLoading) {
+      handleAnalyze();
+    }
+  };
+
+  // Auto-dismiss error after 5 seconds with smooth fade
+  useEffect(() => {
+    if (error) {
+      setIsErrorVisible(true);
+      const fadeTimer = setTimeout(() => {
+        setIsErrorVisible(false);
+        // Remove from DOM after fade animation
+        setTimeout(() => {
+          setError(null);
+        }, 300);
+      }, 5000);
+      return () => clearTimeout(fadeTimer);
+    } else {
+      setIsErrorVisible(false);
+    }
+  }, [error]);
 
   return (
     <div className="min-h-screen w-full bg-background">
@@ -116,22 +268,54 @@ export default function Home() {
           </p>
 
           {/* GitHub repo URL input (Primary CTA) */}
-          <Card className="w-full max-w-lg border-2 shadow-lg animate-border-glow py-4 gap-4">
-            <CardContent className="p-4">
-              <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
-                <Input
-                  type="url"
-                  placeholder="https://github.com/owner/repo"
-                  className="flex-1 border-2 border-border"
-                />
-                <Link href="/app" className="w-full sm:w-auto">
-                  <Button size="default" className="w-full sm:w-auto">
-                    Analyze Repository
+          <div className="relative w-full max-w-lg">
+            <Card className="w-full border-2 shadow-lg animate-border-glow py-4 gap-4">
+              <CardContent className="p-4">
+                <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
+                  <Input
+                    type="text"
+                    placeholder="https://github.com/owner/repo"
+                    value={repoUrl}
+                    onChange={(e) => {
+                      setRepoUrl(e.target.value);
+                      setError(null);
+                    }}
+                    onKeyPress={handleKeyPress}
+                    className="flex-1 border-2 border-border"
+                    disabled={isLoading}
+                  />
+                  <Button
+                    size="default"
+                    className="w-full sm:w-auto"
+                    onClick={handleAnalyze}
+                    disabled={isLoading || !repoUrl.trim()}
+                  >
+                    {isLoading ? (
+                      <>
+                        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                        Processing...
+                      </>
+                    ) : (
+                      "Analyze Repository"
+                    )}
                   </Button>
-                </Link>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Floating Error Alert - Positioned at bottom of card area */}
+            {error && (
+              <div
+                className={cn(
+                  "absolute -bottom-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-2 rounded-lg border border-destructive/50 bg-card shadow-lg px-4 py-3 text-sm transition-all duration-300 max-w-md whitespace-nowrap",
+                  isErrorVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+                )}
+              >
+                <AlertCircle className="h-4 w-4 shrink-0 text-destructive" />
+                <span className="text-destructive font-bold">{error}</span>
               </div>
-            </CardContent>
-          </Card>
+            )}
+          </div>
         </div>
       </section>
 

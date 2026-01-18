@@ -45,7 +45,8 @@ export async function POST(request: NextRequest) {
         repoInfo: result.repoInfo,
         metadata: result.metadata,
         artifactSize: result.artifactSize,
-        // For now, return XML content (in production, return storage path)
+        // Return full XML content for download
+        xmlContent: result.xmlContent,
         xmlPreview: result.xmlContent.substring(0, 1000), // First 1000 chars as preview
       },
     });
