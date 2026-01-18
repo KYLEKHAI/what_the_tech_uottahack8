@@ -61,7 +61,7 @@ export default function Home() {
   const [isErrorVisible, setIsErrorVisible] = useState(false);
   const [userProfile, setUserProfile] = useState<any>(null);
   const router = useRouter();
-  const { setCurrentRepoUrl, addProject } = useDashboardStore();
+  const { setCurrentRepoUrl, addProject, projects, canAddProject, getMaxProjects, loadProjects } = useDashboardStore();
   const { user, loading } = useAuth();
   const isSignedIn = !!user;
 
@@ -72,7 +72,7 @@ export default function Home() {
     { label: "Generating context", icon: Sparkles },
   ];
 
-  // Fetch user profile when user is authenticated
+  // Fetch user profile and load projects when user is authenticated
   useEffect(() => {
     const fetchProfile = async () => {
       if (user?.id) {
@@ -85,10 +85,12 @@ export default function Home() {
 
     if (user) {
       fetchProfile();
+      // Load projects for validation
+      loadProjects(true, user.id);
     } else {
       setUserProfile(null);
     }
-  }, [user]);
+  }, [user, loadProjects]);
 
   const validateGitHubUrl = (url: string): boolean => {
     try {
@@ -153,6 +155,64 @@ export default function Home() {
     if (!validateGitHubUrl(normalizedUrl)) {
       setError("Please enter a valid GitHub repository URL");
       return;
+    }
+
+    // Extract owner and repo from URL for validation
+    let repoOwner = "";
+    let repoName = "";
+    try {
+      const url = new URL(normalizedUrl);
+      const pathParts = url.pathname.split("/").filter(Boolean);
+      if (pathParts.length >= 2) {
+        repoOwner = pathParts[0];
+        repoName = pathParts[1];
+      }
+    } catch {
+      // If URL parsing fails, try to extract from normalized URL
+      const match = normalizedUrl.match(/github\.com\/([^\/]+)\/([^\/]+)/);
+      if (match) {
+        repoOwner = match[1];
+        repoName = match[2];
+      }
+    }
+
+    // Validate project limits and duplicates for signed-in users
+    if (isSignedIn) {
+      // Check if user can add more projects
+      if (!canAddProject(true)) {
+        setError("Cannot go over project limit. Delete a repo first to add a new one.");
+        return;
+      }
+
+      // Check for duplicate repository
+      const repoUrlFormatted = `${repoOwner}/${repoName}`;
+      const isDuplicate = projects.some(
+        (p) => p.repoUrl === repoUrlFormatted || 
+               (p.owner === repoOwner && p.repo === repoName)
+      );
+
+      if (isDuplicate) {
+        setError("Cannot add duplicate repo. This repository has already been added to your projects.");
+        return;
+      }
+    } else {
+      // For non-signed-in users, check localStorage projects
+      const repoUrlFormatted = `${repoOwner}/${repoName}`;
+      const isDuplicate = projects.some(
+        (p) => p.repoUrl === repoUrlFormatted || 
+               (p.owner === repoOwner && p.repo === repoName)
+      );
+
+      if (isDuplicate) {
+        setError("This repository has already been added. Please sign in to add multiple repositories.");
+        return;
+      }
+
+      // Check project limit for non-signed-in users
+      if (projects.length >= 1) {
+        setError("You can only have 1 project without an account. Please sign in to add multiple repositories.");
+        return;
+      }
     }
 
     setIsLoading(true);
