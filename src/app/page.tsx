@@ -6,12 +6,39 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { ProfileDropdown } from "@/components/ui/profile-dropdown";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
-import { Sparkles, Zap, Layers, Shield, MessageSquare, GitBranch, Code, AlertCircle, Loader2, CheckCircle2, FileCode, Eye, Package, Network, Workflow } from "lucide-react";
+import {
+  Sparkles,
+  Zap,
+  Layers,
+  Shield,
+  MessageSquare,
+  GitBranch,
+  Code,
+  AlertCircle,
+  Loader2,
+  CheckCircle2,
+  FileCode,
+  Eye,
+  Package,
+  Network,
+  Workflow,
+  Linkedin,
+} from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useDashboardStore, saveXMLToLocalStorage, saveDiagramToLocalStorage } from "@/lib/stores/dashboard-store";
+import {
+  useDashboardStore,
+  saveXMLToLocalStorage,
+  saveDiagramToLocalStorage,
+} from "@/lib/stores/dashboard-store";
 import { useAuth } from "@/components/providers/auth-provider";
 import { getUserProfile, supabase } from "@/lib/supabase";
 
@@ -21,35 +48,40 @@ const features = [
     title: "Instant Repository Analysis",
     icon: Zap,
     description: "Analyze any GitHub repository instantly",
-    content: "Simply paste a GitHub repository URL and get immediate insights. Our system uses Repomix to generate comprehensive XML analysis of your entire codebase, extracting file structures, dependencies, and project metadata. No account needed to get started. Analyze public repositories instantly!",
+    content:
+      "Simply paste a GitHub repository URL and get immediate insights. Our system uses Repomix to generate comprehensive XML analysis of your entire codebase, extracting file structures, dependencies, and project metadata. No account needed to get started. Analyze public repositories instantly!",
   },
   {
     id: 2,
     title: "AI-Powered Agent Chat",
     icon: MessageSquare,
     description: "Chatbox conversations powered by Google Gemini AI",
-    content: "Ask questions about your codebase and get intelligent, context-aware answers with file citations. Powered by Google Gemini AI, our agent provides accurate responses grounded in your repository's actual code. Every answer includes references to specific files and code sections, ensuring reliable and verifiable insights.",
+    content:
+      "Ask questions about your codebase and get intelligent, context-aware answers with file citations. Powered by Google Gemini AI, our agent provides accurate responses grounded in your repository's actual code. Every answer includes references to specific files and code sections, ensuring reliable and verifiable insights.",
   },
   {
     id: 3,
     title: "Interactive Mermaid Board",
     icon: GitBranch,
     description: "Visual architecture diagrams with rendered and code views",
-    content: "Explore your repository structure through interactive Mermaid diagrams. Toggle between rendered visualizations and raw Mermaid code to understand your project's architecture, data flows, and component relationships. The Board provides both high-level overviews and detailed technical diagrams generated from your codebase analysis.",
+    content:
+      "Explore your repository structure through interactive Mermaid diagrams. Toggle between rendered visualizations and raw Mermaid code to understand your project's architecture, data flows, and component relationships. The Board provides both high-level overviews and detailed technical diagrams generated from your codebase analysis.",
   },
   {
     id: 4,
     title: "Context Caching",
     icon: Sparkles,
     description: "Smart caching for faster responses and reduced token usage",
-    content: "Our system intelligently caches responses for identical questions, saving tokens and providing instant answers. Combined with optimized prompt engineering and smart chat history management, this ensures efficient API usage while maintaining high-quality, context-aware responses.",
+    content:
+      "Our system intelligently caches responses for identical questions, saving tokens and providing instant answers. Combined with optimized prompt engineering and smart chat history management, this ensures efficient API usage while maintaining high-quality, context-aware responses.",
   },
   {
     id: 5,
     title: "Deep Code Understanding",
     icon: Code,
     description: "Comprehensive analysis with Repomix and AI processing",
-    content: "We analyze your entire codebase using Repomix to extract file structures, code patterns, and relationships. The system processes everything from configuration files to source code, building a complete understanding of your project's architecture, dependencies, and implementation details.",
+    content:
+      "We analyze your entire codebase using Repomix to extract file structures, code patterns, and relationships. The system processes everything from configuration files to source code, building a complete understanding of your project's architecture, dependencies, and implementation details.",
   },
 ];
 
@@ -64,7 +96,14 @@ export default function Home() {
   const [typedContent, setTypedContent] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const router = useRouter();
-  const { setCurrentRepoUrl, addProject, projects, canAddProject, getMaxProjects, loadProjects } = useDashboardStore();
+  const {
+    setCurrentRepoUrl,
+    addProject,
+    projects,
+    canAddProject,
+    getMaxProjects,
+    loadProjects,
+  } = useDashboardStore();
   const { user, loading } = useAuth();
   const isSignedIn = !!user;
 
@@ -99,7 +138,10 @@ export default function Home() {
     try {
       const urlObj = new URL(url);
       // Check if it's a GitHub URL
-      if (urlObj.hostname !== "github.com" && urlObj.hostname !== "www.github.com") {
+      if (
+        urlObj.hostname !== "github.com" &&
+        urlObj.hostname !== "www.github.com"
+      ) {
         return false;
       }
       // Check if it has owner/repo format
@@ -111,7 +153,11 @@ export default function Home() {
     } catch {
       // Try parsing as owner/repo format
       const parts = url.trim().split("/").filter(Boolean);
-      if (parts.length >= 2 && !parts[0].includes(".") && !parts[1].includes(".")) {
+      if (
+        parts.length >= 2 &&
+        !parts[0].includes(".") &&
+        !parts[1].includes(".")
+      ) {
         return true;
       }
       return false;
@@ -132,10 +178,9 @@ export default function Home() {
     return trimmed;
   };
 
-
   const handleAnalyze = async () => {
     setError(null);
-    
+
     // Validate URL
     if (!repoUrl.trim()) {
       setError("Please enter a GitHub repository URL");
@@ -143,7 +188,7 @@ export default function Home() {
     }
 
     const normalizedUrl = normalizeRepoUrl(repoUrl);
-    
+
     if (!validateGitHubUrl(normalizedUrl)) {
       setError("Please enter a valid GitHub repository URL");
       return;
@@ -172,37 +217,47 @@ export default function Home() {
     if (isSignedIn) {
       // Check if user can add more projects
       if (!canAddProject(true)) {
-        setError("Cannot go over project limit. Delete a repo first to add a new one.");
+        setError(
+          "Cannot go over project limit. Delete a repo first to add a new one.",
+        );
         return;
       }
 
       // Check for duplicate repository
       const repoUrlFormatted = `${repoOwner}/${repoName}`;
       const isDuplicate = projects.some(
-        (p) => p.repoUrl === repoUrlFormatted || 
-               (p.owner === repoOwner && p.repo === repoName)
+        (p) =>
+          p.repoUrl === repoUrlFormatted ||
+          (p.owner === repoOwner && p.repo === repoName),
       );
 
       if (isDuplicate) {
-        setError("Cannot add duplicate repo. This repository has already been added to your projects.");
+        setError(
+          "Cannot add duplicate repo. This repository has already been added to your projects.",
+        );
         return;
       }
     } else {
       // For non-signed-in users, check localStorage projects
       const repoUrlFormatted = `${repoOwner}/${repoName}`;
       const isDuplicate = projects.some(
-        (p) => p.repoUrl === repoUrlFormatted || 
-               (p.owner === repoOwner && p.repo === repoName)
+        (p) =>
+          p.repoUrl === repoUrlFormatted ||
+          (p.owner === repoOwner && p.repo === repoName),
       );
 
       if (isDuplicate) {
-        setError("This repository has already been added. Please sign in to add multiple repositories.");
+        setError(
+          "This repository has already been added. Please sign in to add multiple repositories.",
+        );
         return;
       }
 
       // Check project limit for non-signed-in users
       if (projects.length >= 1) {
-        setError("You can only have 1 project without an account. Please sign in to add multiple repositories.");
+        setError(
+          "You can only have 1 project without an account. Please sign in to add multiple repositories.",
+        );
         return;
       }
     }
@@ -214,15 +269,18 @@ export default function Home() {
     const stepTimings = [1500, 3000, 2500, 2000]; // ms for each step
     let currentStepIndex = 0;
     let timeoutId: NodeJS.Timeout | null = null;
-    
+
     const advanceStep = () => {
       if (currentStepIndex < loadingSteps.length - 1) {
         currentStepIndex++;
         setLoadingStep(currentStepIndex);
-        timeoutId = setTimeout(advanceStep, stepTimings[currentStepIndex] || 2000);
+        timeoutId = setTimeout(
+          advanceStep,
+          stepTimings[currentStepIndex] || 2000,
+        );
       }
     };
-    
+
     // Start the first step after initial delay
     timeoutId = setTimeout(advanceStep, stepTimings[0]);
 
@@ -230,7 +288,9 @@ export default function Home() {
       // Get access token from Supabase session to pass to API route
       let accessToken: string | null = null;
       if (isSignedIn && user) {
-        const { data: { session } } = await supabase.auth.getSession();
+        const {
+          data: { session },
+        } = await supabase.auth.getSession();
         accessToken = session?.access_token || null;
       }
 
@@ -253,28 +313,37 @@ export default function Home() {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || data.error || "Failed to process repository");
+        throw new Error(
+          data.message || data.error || "Failed to process repository",
+        );
       }
 
       if (data.success && data.data) {
         if (timeoutId) clearTimeout(timeoutId);
         // Ensure all steps are marked as completed
         setLoadingStep(loadingSteps.length - 1);
-        
+
         const repoName = `${data.data.repoInfo.owner}-${data.data.repoInfo.name}`;
-        
+
         // Use database UUID if available (signed-in user), otherwise generate string ID
-        const projectId = data.data.projectId || `${data.data.repoInfo.owner}-${data.data.repoInfo.name}-${Date.now()}`;
-        
+        const projectId =
+          data.data.projectId ||
+          `${data.data.repoInfo.owner}-${data.data.repoInfo.name}-${Date.now()}`;
+
         // Log for debugging
         if (isSignedIn) {
           if (data.data.projectId) {
-            console.log("Project created in database with ID:", data.data.projectId);
+            console.log(
+              "Project created in database with ID:",
+              data.data.projectId,
+            );
           } else {
-            console.warn("User is signed in but projectId is missing. Project may not be saved to database.");
+            console.warn(
+              "User is signed in but projectId is missing. Project may not be saved to database.",
+            );
           }
         }
-        
+
         // Save XML content (for non-signed-in users, store locally; for signed-in, already in database)
         if (!isSignedIn && data.data.xmlContent) {
           // Save XML to localStorage for non-signed-in users
@@ -285,24 +354,34 @@ export default function Home() {
         if (!isSignedIn && data.data.diagrams) {
           // Save diagrams to localStorage for non-signed-in users
           saveDiagramToLocalStorage(projectId, data.data.diagrams);
-          console.log("💾 Saved diagrams to localStorage for guest user:", projectId);
+          console.log(
+            "💾 Saved diagrams to localStorage for guest user:",
+            projectId,
+          );
         }
 
         // Add project to store and select it (this also sets currentRepoUrl)
         // Store XML locally if:
         // 1. User is not signed in (always store locally)
         // 2. User is signed in but XML wasn't saved to storage (fallback)
-        const shouldStoreXMLLocally = !isSignedIn || (isSignedIn && data.data.xmlContent && !data.data.xmlSaved);
-        addProject({
-          id: projectId, // Use UUID as string ID if from database, otherwise generated ID
-          dbId: data.data.projectId || undefined, // Store database UUID if available
-          name: data.data.repoInfo.name,
-          repoUrl: `${data.data.repoInfo.owner}/${data.data.repoInfo.name}`,
-          owner: data.data.repoInfo.owner,
-          repo: data.data.repoInfo.name,
-          status: "ready",
-          xmlContent: shouldStoreXMLLocally ? data.data.xmlContent : undefined,
-        }, isSignedIn);
+        const shouldStoreXMLLocally =
+          !isSignedIn ||
+          (isSignedIn && data.data.xmlContent && !data.data.xmlSaved);
+        addProject(
+          {
+            id: projectId, // Use UUID as string ID if from database, otherwise generated ID
+            dbId: data.data.projectId || undefined, // Store database UUID if available
+            name: data.data.repoInfo.name,
+            repoUrl: `${data.data.repoInfo.owner}/${data.data.repoInfo.name}`,
+            owner: data.data.repoInfo.owner,
+            repo: data.data.repoInfo.name,
+            status: "ready",
+            xmlContent: shouldStoreXMLLocally
+              ? data.data.xmlContent
+              : undefined,
+          },
+          isSignedIn,
+        );
 
         // Small delay before redirect to show completion
         setTimeout(() => {
@@ -315,20 +394,27 @@ export default function Home() {
       if (timeoutId) clearTimeout(timeoutId);
       console.error("Ingestion error:", err);
       let errorMessage = "Failed to process repository. Please try again.";
-      
+
       if (err instanceof Error) {
         const errMsg = err.message.toLowerCase();
-        if (errMsg.includes("private") || errMsg.includes("authentication") || errMsg.includes("permission")) {
-          errorMessage = "This repository appears to be private. Only public repositories are supported.";
+        if (
+          errMsg.includes("private") ||
+          errMsg.includes("authentication") ||
+          errMsg.includes("permission")
+        ) {
+          errorMessage =
+            "This repository appears to be private. Only public repositories are supported.";
         } else if (errMsg.includes("not found") || errMsg.includes("404")) {
-          errorMessage = "Repository not found. Please check the URL and ensure the repository exists.";
+          errorMessage =
+            "Repository not found. Please check the URL and ensure the repository exists.";
         } else if (errMsg.includes("clone") || errMsg.includes("git")) {
-          errorMessage = "Failed to access repository. Please ensure it's a public GitHub repository.";
+          errorMessage =
+            "Failed to access repository. Please ensure it's a public GitHub repository.";
         } else {
           errorMessage = err.message;
         }
       }
-      
+
       setError(errorMessage);
     } finally {
       if (timeoutId) clearTimeout(timeoutId);
@@ -461,8 +547,8 @@ export default function Home() {
           <p className="text-lg text-muted-foreground sm:text-xl">
             Ever wondered{" "}
             <span className="italic line-through font-bold">what the heck</span>{" "}
-            <span className="animate-fade-color font-bold">what the tech</span> is behind
-            a project on Github?
+            <span className="animate-fade-color font-bold">what the tech</span>{" "}
+            is behind a project on Github?
           </p>
           <p className="text-lg text-muted-foreground sm:text-xl">
             Convert GitHub repositories into explorable knowledge hubs with AI
@@ -477,7 +563,7 @@ export default function Home() {
                 No Sign Up Required
               </div>
             </div>
-            
+
             <Card className="w-full border-2 shadow-lg animate-border-glow py-4 gap-4">
               <CardContent className="p-4">
                 <div className="flex w-full flex-col gap-3 sm:flex-row sm:items-center">
@@ -522,9 +608,14 @@ export default function Home() {
                   {/* Progress Bar */}
                   <div className="mb-4">
                     <div className="mb-2 flex items-center justify-between text-xs">
-                      <span className="font-medium text-muted-foreground">Processing repository</span>
+                      <span className="font-medium text-muted-foreground">
+                        Processing repository
+                      </span>
                       <span className="font-semibold text-primary">
-                        {Math.round(((loadingStep + 1) / loadingSteps.length) * 100)}%
+                        {Math.round(
+                          ((loadingStep + 1) / loadingSteps.length) * 100,
+                        )}
+                        %
                       </span>
                     </div>
                     <div className="h-2 w-full overflow-hidden rounded-full bg-muted">
@@ -544,7 +635,7 @@ export default function Home() {
                       const isActive = index === loadingStep;
                       const isCompleted = index < loadingStep;
                       const isPending = index > loadingStep;
-                      
+
                       return (
                         <div
                           key={index}
@@ -553,8 +644,8 @@ export default function Home() {
                             isActive
                               ? "border-primary/50 bg-primary/5 shadow-sm"
                               : isCompleted
-                              ? "border-primary/30 bg-primary/5"
-                              : "border-border bg-background opacity-60"
+                                ? "border-primary/30 bg-primary/5"
+                                : "border-border bg-background opacity-60",
                           )}
                         >
                           {/* Icon */}
@@ -564,8 +655,8 @@ export default function Home() {
                               isCompleted
                                 ? "border-primary bg-primary text-primary-foreground shadow-sm"
                                 : isActive
-                                ? "border-primary bg-primary/10 text-primary shadow-md ring-2 ring-primary/20 animate-pulse"
-                                : "border-border bg-muted text-muted-foreground"
+                                  ? "border-primary bg-primary/10 text-primary shadow-md ring-2 ring-primary/20 animate-pulse"
+                                  : "border-border bg-muted text-muted-foreground",
                             )}
                           >
                             {isCompleted ? (
@@ -584,7 +675,7 @@ export default function Home() {
                                 "text-sm font-medium transition-colors",
                                 isActive && "text-primary",
                                 isCompleted && "text-primary/80",
-                                isPending && "text-muted-foreground"
+                                isPending && "text-muted-foreground",
                               )}
                             >
                               {step.label}
@@ -598,7 +689,9 @@ export default function Home() {
 
                           {/* Status Indicator */}
                           {isCompleted && (
-                            <div className="text-xs font-medium text-primary">Done</div>
+                            <div className="text-xs font-medium text-primary">
+                              Done
+                            </div>
                           )}
                         </div>
                       );
@@ -613,11 +706,15 @@ export default function Home() {
               <div
                 className={cn(
                   "absolute -bottom-24 left-1/2 -translate-x-1/2 z-50 flex items-start gap-2 rounded-lg border border-destructive/50 bg-card shadow-lg px-4 py-3 text-sm transition-all duration-300 max-w-[calc(100vw-2rem)] sm:max-w-lg md:max-w-xl",
-                  isErrorVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-2 pointer-events-none"
+                  isErrorVisible
+                    ? "opacity-100 translate-y-0"
+                    : "opacity-0 translate-y-2 pointer-events-none",
                 )}
               >
                 <AlertCircle className="h-4 w-4 shrink-0 text-destructive mt-0.5" />
-                <span className="text-destructive font-bold break-words min-w-0">{error}</span>
+                <span className="text-destructive font-bold break-words min-w-0">
+                  {error}
+                </span>
               </div>
             )}
           </div>
@@ -633,25 +730,32 @@ export default function Home() {
           <h2 className="mb-6 text-3xl font-bold text-foreground">About</h2>
           <div className="mb-12 space-y-4 text-muted-foreground">
             <p className="text-base leading-relaxed">
-              <strong className="text-foreground">what-the-tech</strong> transforms any GitHub repository into an interactive
-              knowledge hub powered by AI. Explore codebases through intelligent chat conversations
-              and visual architecture diagrams, all without needing to clone or manually navigate repositories.
+              <strong className="text-foreground">what-the-tech</strong>{" "}
+              transforms any GitHub repository into an interactive knowledge hub
+              powered by AI. Explore codebases through intelligent chat
+              conversations and visual architecture diagrams, all without
+              needing to clone or manually navigate repositories.
             </p>
             <p className="text-base leading-relaxed">
-              Our <strong className="text-foreground">Agent</strong> provides chatbox conversations powered by Google Gemini AI,
-              answering questions about your codebase with citations from actual code files. Every response
-              is grounded in your repository's content using RAG (Retrieval Augmented Generation), ensuring
-              accurate and verifiable answers.
+              Our <strong className="text-foreground">Agent</strong> provides
+              chatbox conversations powered by Google Gemini AI, answering
+              questions about your codebase with citations from actual code
+              files. Every response is grounded in your repository's content
+              using RAG (Retrieval Augmented Generation), ensuring accurate and
+              verifiable answers.
             </p>
             <p className="text-base leading-relaxed">
-              The <strong className="text-foreground">Board</strong> visualizes your project structure using interactive Mermaid diagrams,
-              generated from comprehensive codebase analysis. Toggle between rendered visualizations and raw
-              Mermaid code to understand architecture, data flows, and component relationships at a glance.
+              The <strong className="text-foreground">Board</strong> visualizes
+              your project structure using interactive Mermaid diagrams,
+              generated from comprehensive codebase analysis. Toggle between
+              rendered visualizations and raw Mermaid code to understand
+              architecture, data flows, and component relationships at a glance.
             </p>
             <p className="text-base leading-relaxed">
-              Built for developers who want to understand codebases faster, onboard new team members efficiently,
-              explore open-source projects with confidence, and get instant answers about any repository's structure
-              and implementation.
+              Built for developers who want to understand codebases faster,
+              onboard new team members efficiently, explore open-source projects
+              with confidence, and get instant answers about any repository's
+              structure and implementation.
             </p>
           </div>
 
@@ -663,7 +767,9 @@ export default function Home() {
                 <div className="mb-3 flex justify-center">
                   <Eye className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <CardTitle className="text-base font-mono">Project Overview</CardTitle>
+                <CardTitle className="text-base font-mono">
+                  Project Overview
+                </CardTitle>
               </CardHeader>
               <CardDescription className="text-sm leading-relaxed italic font-mono">
                 "Give me a high-level overview of this project"
@@ -676,7 +782,9 @@ export default function Home() {
                 <div className="mb-3 flex justify-center">
                   <Package className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <CardTitle className="text-base font-mono">Tech Stack Analysis</CardTitle>
+                <CardTitle className="text-base font-mono">
+                  Tech Stack Analysis
+                </CardTitle>
               </CardHeader>
               <CardDescription className="text-sm leading-relaxed italic font-mono">
                 "What is the tech stack?"
@@ -689,7 +797,9 @@ export default function Home() {
                 <div className="mb-3 flex justify-center">
                   <Network className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <CardTitle className="text-base font-mono">API Integration</CardTitle>
+                <CardTitle className="text-base font-mono">
+                  API Integration
+                </CardTitle>
               </CardHeader>
               <CardDescription className="text-sm leading-relaxed italic font-mono">
                 "What are the specific APIs being called?"
@@ -702,7 +812,9 @@ export default function Home() {
                 <div className="mb-3 flex justify-center">
                   <Workflow className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <CardTitle className="text-base font-mono">Business Flow</CardTitle>
+                <CardTitle className="text-base font-mono">
+                  Business Flow
+                </CardTitle>
               </CardHeader>
               <CardDescription className="text-sm leading-relaxed italic font-mono">
                 "What is the login authentication flow?"
@@ -713,7 +825,10 @@ export default function Home() {
       </section>
 
       {/* Features Section */}
-      <section id="features" className="container mx-auto px-4 py-6 sm:px-6 lg:px-8 scroll-mt-20">
+      <section
+        id="features"
+        className="container mx-auto px-4 py-6 sm:px-6 lg:px-8 scroll-mt-20"
+      >
         <div className="mx-auto max-w-6xl">
           <h2 className="mb-12 text-left text-3xl font-bold text-foreground">
             Features
@@ -732,7 +847,7 @@ export default function Home() {
                       "flex items-start gap-3 rounded-lg border p-4 text-left transition-all hover:bg-accent",
                       isSelected
                         ? "border-primary bg-primary/5"
-                        : "border-border bg-card"
+                        : "border-border bg-card",
                     )}
                   >
                     <div
@@ -740,7 +855,7 @@ export default function Home() {
                         "flex h-10 w-10 shrink-0 items-center justify-center rounded-lg",
                         isSelected
                           ? "bg-primary text-primary-foreground"
-                          : "bg-muted text-muted-foreground"
+                          : "bg-muted text-muted-foreground",
                       )}
                     >
                       <Icon className="h-5 w-5" />
@@ -749,7 +864,9 @@ export default function Home() {
                       <h3
                         className={cn(
                           "mb-1 font-semibold font-mono",
-                          isSelected ? "text-foreground" : "text-muted-foreground"
+                          isSelected
+                            ? "text-foreground"
+                            : "text-muted-foreground",
                         )}
                       >
                         {feature.title}
@@ -772,7 +889,9 @@ export default function Home() {
                     return <Icon className="h-6 w-6" />;
                   })()}
                 </div>
-                <CardTitle className="text-2xl font-mono">{selectedFeature.title}</CardTitle>
+                <CardTitle className="text-2xl font-mono">
+                  {selectedFeature.title}
+                </CardTitle>
                 <CardDescription className="text-base font-mono">
                   {selectedFeature.description}
                 </CardDescription>
@@ -791,24 +910,51 @@ export default function Home() {
       {/* Footer */}
       <footer className="mt-24 border-t border-border bg-card">
         <div className="container mx-auto flex min-h-20 items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
-          {/* Left: Logo + Text + Copyright */}
-          <div className="flex items-center gap-2">
-            <div className="h-10 w-10 rounded-full dark:bg-white p-1 flex items-center justify-center">
-              <Image
-                src="/what-the-stack-logo.png"
-                alt="what-the-tech logo"
-                width={40}
-                height={40}
-                className="h-full w-full object-contain"
-              />
+          {/* Left: Logo + Text + Copyright + Creators */}
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center gap-2">
+              <div className="h-10 w-10 rounded-full dark:bg-white p-1 flex items-center justify-center">
+                <Image
+                  src="/what-the-stack-logo.png"
+                  alt="what-the-tech logo"
+                  width={40}
+                  height={40}
+                  className="h-full w-full object-contain"
+                />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-base font-semibold text-foreground">
+                  what-the-tech
+                </span>
+                <span className="text-sm text-foreground">© 2026</span>
+              </div>
             </div>
-            <div className="flex flex-col">
-              <span className="text-base font-semibold text-foreground">
-                what-the-tech
+
+            {/* Creators Section */}
+            <div className="flex flex-col gap-1.5 pl-1">
+              <span className="text-xs text-muted-foreground font-medium">
+                Created by
               </span>
-              <span className="text-sm text-foreground">
-                © 2026
-              </span>
+              <div className="flex flex-col gap-1">
+                <a
+                  href="https://www.linkedin.com/in/kylekhaitran/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors group"
+                >
+                  <Linkedin className="h-4 w-4 text-[#0A66C2] group-hover:scale-110 transition-transform" />
+                  <span>Kyle Khai Tran</span>
+                </a>
+                <a
+                  href="https://www.linkedin.com/in/arunsabaratnam/"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 text-sm text-foreground hover:text-primary transition-colors group"
+                >
+                  <Linkedin className="h-4 w-4 text-[#0A66C2] group-hover:scale-110 transition-transform" />
+                  <span>Arun Sabaratnam</span>
+                </a>
+              </div>
             </div>
           </div>
 
@@ -824,7 +970,9 @@ export default function Home() {
               />
               <p className="text-xs text-foreground">
                 <span className="text-foreground">Built For </span>
-                <span className="font-semibold text-foreground">uOttaHack 8</span>
+                <span className="font-semibold text-foreground">
+                  uOttaHack 8
+                </span>
               </p>
             </div>
 
@@ -838,7 +986,9 @@ export default function Home() {
               />
               <p className="text-xs text-foreground">
                 <span className="text-foreground">Powered By </span>
-                <span className="font-semibold text-foreground">Google Gemini AI</span>
+                <span className="font-semibold text-foreground">
+                  Google Gemini AI
+                </span>
               </p>
             </div>
 
@@ -852,13 +1002,14 @@ export default function Home() {
               />
               <p className="text-xs text-foreground">
                 <span className="text-foreground">Supported By </span>
-                <span className="font-semibold text-foreground">Major League Hacking (MLH)</span>
+                <span className="font-semibold text-foreground">
+                  Major League Hacking (MLH)
+                </span>
               </p>
             </div>
           </div>
         </div>
       </footer>
-
     </div>
   );
 }
