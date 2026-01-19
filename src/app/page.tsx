@@ -31,6 +31,7 @@ import {
   Package,
   Network,
   Workflow,
+  Github,
   Linkedin,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -911,7 +912,7 @@ export default function Home() {
       <footer className="mt-24 border-t border-border bg-card">
         <div className="container mx-auto flex min-h-20 items-center justify-between px-4 py-6 sm:px-6 lg:px-8">
           {/* Left: Logo + Text + Copyright + Creators */}
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-5">
             <div className="flex items-center gap-2">
               <div className="h-10 w-10 rounded-full dark:bg-white p-1 flex items-center justify-center">
                 <Image
@@ -955,6 +956,21 @@ export default function Home() {
                   <span>Arun Sabaratnam</span>
                 </a>
               </div>
+            </div>
+
+            {/* GitHub - Open Source link */}
+            <div>
+              <a
+                href="https://github.com/KYLEKHAI/what_the_tech_uottahack8"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-3 text-sm text-foreground hover:text-primary transition-colors group"
+              >
+                <span className="inline-flex h-8 w-8 items-center justify-center rounded-full border border-border bg-card/10 dark:bg-card/20 transition-colors group-hover:shadow-md -ml-5">
+                  <Github className="h-4 w-4 text-foreground group-hover:scale-110 transition-transform" />
+                </span>
+                <span className="font-medium">Proudly Open Sourced</span>
+              </a>
             </div>
           </div>
 
